@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>DGEA – Sistema de Gestión Integrado v4</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DGEA App">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --azul: #1F3864;
+    --azul-med: #1F4E79;
+    --azul-claro: #2E75B6;
+    --azul-bg: #D6E4F0;
+    --verde: #276221;
+    --verde-bg: #E2EFDA;
+    --rojo: #C00000;
+    --rojo-bg: #FFE0E0;
+    --naranja: #E87722;
+    --naranja-bg: #FFF0DC;
+    --amarillo-bg: #FFFACD;
+    --gris-bg: #F5F7FA;
+    --borde: #D0D7E2;
+    --texto: #1a1a2e;
+    --texto-muted: #555;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --radio: 8px;
+    --radio-lg: 12px;
+    --sombra: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: #EEF2F8; color: var(--texto); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-med) 100%);
+    color: white;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-escudo {
+    width: 42px; height: 42px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .header-title { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+  .header-sub { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+  .header-badges { display: flex; gap: 8px; align-items: center; }
+  .badge-header {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-header.rojo { background: rgba(192,0,0,0.6); }
+  .badge-header.verde { background: rgba(39,98,33,0.7); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    padding: 0 24px;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,0.9); }
+  .nav-tab.active { color: white; border-bottom-color: #64B5F6; }
+
+  /* MAIN CONTENT */
+  .content { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* CRONOGRAMA / SUBACTIVIDADES */
+  .crono-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 4px; border-bottom: 1px solid #F0F0F0;
+  }
+  .crono-item:last-child { border-bottom: none; }
+  .crono-check {
+    width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--borde);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    flex-shrink: 0; font-size: 14px; color: white; transition: all .15s; user-select: none;
+  }
+  .crono-check.hecho { background: var(--verde); border-color: var(--verde); }
+  .crono-txt { flex: 1; font-size: 13px; line-height: 1.35; }
+  .crono-txt.hecho { text-decoration: line-through; color: #999; }
+  .crono-fecha { font-size: 10px; color: var(--texto-muted); white-space: nowrap; }
+  .crono-del { cursor: pointer; color: var(--rojo); font-size: 13px; opacity: .6; flex-shrink:0; }
+  .crono-del:hover { opacity: 1; }
+  .crono-progreso-wrap { height: 10px; background: #E0E6ED; border-radius: 5px; overflow: hidden; margin: 10px 0 14px; }
+  .crono-progreso-fill { height: 100%; background: var(--verde); border-radius: 5px; transition: width .3s; }
+  .crono-add-row { display: flex; gap: 8px; margin-top: 12px; }
+  .crono-add-row input[type=text] { flex: 1; }
+  .btn-mini {
+    border: 1px solid var(--borde); background: white; border-radius: 7px;
+    padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; color: var(--azul);
+  }
+  .btn-mini:hover { background: var(--azul-bg); }
+  .btn-mini.rojo { color: var(--rojo); }
+
+  /* INSTALAR APP */
+  .btn-instalar {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+    color: white; border-radius: 20px; padding: 5px 13px; font-size: 11px; font-weight: 700;
+    cursor: pointer; display: none; align-items: center; gap: 5px;
+  }
+  .btn-instalar.mostrar { display: inline-flex; }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--azul);
+    color: white;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-header h3 { font-size: 14px; font-weight: 700; }
+  .card-body { padding: 16px 18px; }
+
+  /* METRIC CARDS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .metric-card {
+    background: white;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    padding: 14px 16px;
+    text-align: center;
+    box-shadow: var(--sombra);
+  }
+  .metric-card.rojo { border-left: 4px solid var(--rojo); }
+  .metric-card.verde { border-left: 4px solid var(--verde); }
+  .metric-card.azul { border-left: 4px solid var(--azul-claro); }
+  .metric-card.naranja { border-left: 4px solid var(--naranja); }
+  .metric-num { font-size: 32px; font-weight: 800; color: var(--azul); line-height: 1; }
+  .metric-num.rojo { color: var(--rojo); }
+  .metric-num.verde { color: var(--verde); }
+  .metric-num.naranja { color: var(--naranja); }
+  .metric-label { font-size: 11px; color: var(--texto-muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* TABLA */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    background: var(--azul);
+    color: white;
+    padding: 9px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ECF0F5;
+    vertical-align: middle;
+  }
+  tr:hover td { background: #F5F8FC; }
+  tr.completado td { opacity: 0.6; }
+
+  /* BADGES / PILLS */
+  .pill {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .pill-alta { background: #FFE0E0; color: #8B0000; }
+  .pill-media { background: #FFFACD; color: #7A6000; }
+  .pill-baja { background: #E2EFDA; color: #276221; }
+  .pill-pendiente { background: #FFF3CD; color: #7A5000; }
+  .pill-proceso { background: #D6EAF8; color: #1F4E79; }
+  .pill-completado { background: #E2EFDA; color: #276221; }
+  .pill-cancelado { background: #F0F0F0; color: #555; }
+  .pill-vencida { background: #FFE0E0; color: #8B0000; }
+  .pill-plazo { background: #E8F5E9; color: #1B5E20; }
+  .pill-hoy { background: #FFE0E0; color: #8B0000; }
+  .pill-mañana { background: #FFE8CC; color: #7A3800; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; font-weight: 600; color: var(--texto-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .form-group input, .form-group select, .form-group textarea {
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--texto);
+    background: white;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--azul-claro);
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.1);
+  }
+  .form-group textarea { min-height: 72px; resize: vertical; }
+
+  /* BUTTONS */
+  .btn {
+    border: none;
+    border-radius: var(--radio);
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--azul-med); color: white; }
+  .btn-primary:hover { background: var(--azul); }
+  .btn-success { background: var(--verde); color: white; }
+  .btn-success:hover { background: #1d4e18; }
+  .btn-danger { background: var(--rojo); color: white; }
+  .btn-danger:hover { background: #990000; }
+  .btn-outline { background: white; color: var(--azul); border: 1px solid var(--azul); }
+  .btn-outline:hover { background: var(--azul-bg); }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+  .btn-icon { background: none; border: 1px solid var(--borde); color: var(--texto-muted); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13px; }
+  .btn-icon:hover { background: var(--gris-bg); }
+
+  /* FILTROS */
+  .filtros-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .filtros-bar select, .filtros-bar input {
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: var(--font);
+    background: white;
+    color: var(--texto);
+  }
+  .filtros-bar select:focus, .filtros-bar input:focus {
+    outline: none;
+    border-color: var(--azul-claro);
+  }
+
+  /* SECCION TECNICO */
+  .tecnico-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .tecnico-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--borde);
+    background: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--texto-muted);
+  }
+  .tecnico-pill:hover { border-color: var(--azul-claro); color: var(--azul); }
+  .tecnico-pill.active { background: var(--azul); color: white; border-color: var(--azul); }
+
+  /* SEMAFORO */
+  .sem-rojo { color: var(--rojo); font-weight: 700; }
+  .sem-amarillo { color: #E87722; font-weight: 700; }
+  .sem-verde { color: var(--verde); font-weight: 700; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: var(--radio-lg);
+    padding: 24px;
+    width: 92%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--borde);
+  }
+  .modal-header h3 { color: var(--azul); font-size: 16px; }
+  .modal-close { font-size: 22px; cursor: pointer; background: none; border: none; color: var(--texto-muted); line-height: 1; }
+  .modal-close:hover { color: var(--rojo); }
+
+  /* PDF UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--borde);
+    border-radius: var(--radio-lg);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--gris-bg);
+  }
+  .upload-zone:hover { border-color: var(--azul-claro); background: #EEF5FF; }
+  .upload-zone.drag-over { border-color: var(--azul-claro); background: #D6E4F0; }
+  .upload-icon { font-size: 40px; margin-bottom: 8px; }
+  .upload-text { font-size: 14px; color: var(--texto-muted); }
+  .upload-sub { font-size: 12px; color: #999; margin-top: 4px; }
+
+  /* REUNION */
+  .reunion-card {
+    background: white;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-lg);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: box-shadow 0.2s;
+  }
+  .reunion-card:hover { box-shadow: var(--sombra); }
+  .reunion-fecha-box {
+    background: var(--azul);
+    color: white;
+    border-radius: var(--radio);
+    padding: 6px 12px;
+    text-align: center;
+    min-width: 52px;
+    flex-shrink: 0;
+  }
+  .reunion-dia { font-size: 22px; font-weight: 800; line-height: 1; }
+  .reunion-mes { font-size: 10px; text-transform: uppercase; opacity: 0.8; }
+  .reunion-info { flex: 1; }
+  .reunion-titulo { font-size: 14px; font-weight: 700; color: var(--azul); }
+  .reunion-meta { font-size: 12px; color: var(--texto-muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .reunion-meta span { display: flex; align-items: center; gap: 4px; }
+
+  /* HOJA RUTA STATUS */
+  .hr-dias {
+    font-weight: 800;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .hr-dias.rojo { background: #FFE0E0; color: #8B0000; }
+  .hr-dias.amarillo { background: #FFF8CC; color: #7A6000; }
+  .hr-dias.verde { background: #E2EFDA; color: #276221; }
+
+  /* AVANCE BAR */
+  .avance-bar {
+    height: 6px;
+    background: #E0E6ED;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 80px;
+  }
+  .avance-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--azul-claro);
+    transition: width 0.3s;
+  }
+  .avance-fill.alta { background: var(--rojo); }
+  .avance-fill.completo { background: var(--verde); }
+
+  /* NOTIF TOAST */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--verde);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radio-lg);
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    transform: translateY(60px);
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .content { padding: 12px; }
+    .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    .header-top { padding: 10px 12px; }
+    .nav-tab { padding: 8px 12px; font-size: 12px; }
+  }
+
+  /* TECNICO PANEL */
+  .tecnico-header-card {
+    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-claro) 100%);
+    color: white;
+    border-radius: var(--radio-lg);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--sombra);
+  }
+  .avatar {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+  .tec-nombre { font-size: 17px; font-weight: 800; }
+  .tec-cargo { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .tec-stats { margin-left: auto; display: flex; gap: 16px; }
+  .tec-stat { text-align: center; }
+  .tec-stat-num { font-size: 22px; font-weight: 800; }
+  .tec-stat-lab { font-size: 10px; opacity: 0.7; text-transform: uppercase; }
+
+  /* CHECKBOX CUSTOM */
+  .check-btn {
+    width: 22px; height: 22px;
+    border: 2px solid var(--borde);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    background: white;
+    flex-shrink: 0;
+  }
+  .check-btn.checked { background: var(--verde); border-color: var(--verde); color: white; }
+  .check-btn:hover { border-color: var(--verde); }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--borde); margin: 16px 0; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--azul);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--borde), transparent);
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--texto-muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* INPUT FILE HIDDEN */
+  input[type="file"] { display: none; }
+
+  /* ROW ACTIONS */
+  .row-actions { display: flex; gap: 4px; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="header-brand">
+      <div class="header-escudo">🏛️</div>
+      <div>
+        <div class="header-title">DGEA – Sistema de Gestión Integrado v4</div>
+        <div class="header-sub">Ministerio de Educación Bolivia · Dirección General de Educación Alternativa</div>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge-header" id="badge-sync" style="cursor:pointer" onclick="sincronizarAhora(true)" title="Sincronizar ahora">☁️ —</span>
+      <button class="btn-instalar" id="btn-instalar-app" onclick="instalarApp()">📲 Instalar app</button>
+      <span class="badge-header rojo" id="badge-urgentes">⚠ 15 vencidas</span>
+      <span class="badge-header" id="badge-fecha">📅 05/06/2026</span>
+      <span class="badge-header verde">👤 Ximena</span>
+      <span class="badge-header" style="cursor:pointer" onclick="abrirModal('modal-ajustes')" title="Ajustes de notificaciones">⚙️</span>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+    <div class="nav-tab" onclick="showTab('tareas')">📋 Tareas</div>
+    <div class="nav-tab" onclick="showTab('reuniones')">📅 Reuniones</div>
+    <div class="nav-tab" onclick="showTab('normas')">📚 Normas / Guías</div>
+    <div class="nav-tab" onclick="showTab('hojas-ruta')">📄 Hojas de Ruta</div>
+    <div class="nav-tab" onclick="showTab('cctp')">🏫 CCTPs</div>
+    <div class="nav-tab" onclick="showTab('archivo')">🗂️ Archivo</div>
+    <div class="nav-tab" onclick="showTab('tecnicos-view')">👥 Vista Técnicos</div>
+    <div class="nav-tab" onclick="showTab('equipo')">⚙️ Equipo</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Operación exitosa</div>
+
+<!-- MODAL NUEVA TAREA -->
+<div class="modal-overlay" id="modal-tarea">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>➕ Nueva Tarea</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-tarea')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column: 1/-1">
+        <label>Descripción de la Tarea *</label>
+        <textarea id="t-desc" placeholder="Describe detalladamente la tarea..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Técnico *</label>
+        <select id="t-tecnico">
+          <option value="">-- Seleccionar --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Documento</label>
+        <select id="t-tipo">
+          <option value="">-- Seleccionar --</option>
+          <option>REUNIÓN</option>
+          <option>TALLER</option>
+          <option>GUÍA</option>
+          <option>MANUAL</option>
+          <option>INSTRUCTIVO</option>
+          <option>INFORME</option>
+          <option>DOCUMENTO</option>
+          <option>SEGUIMIENTO</option>
+          <option>ACTIVIDAD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Referencia/Proveído</label>
+        <input type="text" id="t-ref" placeholder="Ej: DGEA/2026-123">
+      </div>
+      <div class="form-group">
+        <label>Prioridad *</label>
+        <select id="t-prioridad">
+          <option value="🔴 ALTA">🔴 ALTA</option>
+          <option value="🟡 MEDIA" selected>🟡 MEDIA</option>
+          <option value="🟢 BAJA">🟢 BAJA</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha de Inicio</label>
+        <input type="date" id="t-inicio">
+      </div>
+      <div class="form-group">
+        <label>Fecha de Entrega *</label>
+        <input type="date" id="t-entrega">
+      </div>
+      <div class="form-group" style="grid-column: 1/-1">
+        <label>Observaciones</label>
+        <input type="text" id="t-obs" placeholder="Notas adicionales...">
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-tarea')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTarea()">💾 Guardar Tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA REUNIÓN -->
+<div class="modal-overlay" id="modal-reunion">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📅 Nueva Reunión</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-reunion')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Asunto / Descripción *</label>
+        <input type="text" id="r-desc" placeholder="Ej: Revisión POA 2026 · Sala de reuniones">
+      </div>
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="r-fecha">
+      </div>
+      <div class="form-group">
+        <label>Hora</label>
+        <input type="time" id="r-hora" value="09:00">
+      </div>
+      <div class="form-group">
+        <label>Lugar</label>
+        <input type="text" id="r-lugar" placeholder="Sala de reuniones DGEA">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="r-tipo">
+          <option>INTERNA</option>
+          <option>VEAE</option>
+          <option>VICEMINISTRO</option>
+          <option>EXTERNA</option>
+          <option>COORDINACIÓN</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Participantes</label>
+        <div id="r-participantes-check" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;"></div>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Agenda / Notas</label>
+        <textarea id="r-agenda" placeholder="Puntos a tratar..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-reunion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarReunion()">💾 Guardar Reunión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO TÉCNICO -->
+<div class="modal-overlay" id="modal-tecnico">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>👤 Agregar Nuevo Técnico</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-tecnico')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nombre Completo *</label>
+        <input type="text" id="nt-nombre" placeholder="APELLIDO NOMBRE (en mayúsculas)">
+      </div>
+      <div class="form-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="nt-correo" placeholder="correo@dominio.com">
+      </div>
+      <div class="form-group">
+        <label>Teléfono / WhatsApp</label>
+        <input type="text" id="nt-tel" placeholder="+591 7XXXXXXX">
+      </div>
+      <div class="form-group">
+        <label>Telegram ID (opcional)</label>
+        <input type="text" id="nt-telegram" placeholder="@usuario_telegram">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Especialidad / Cargo</label>
+        <input type="text" id="nt-esp" placeholder="Ej: Técnico Especialista Educación Alternativa">
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-tecnico')">Cancelar</button>
+      <button class="btn btn-success" onclick="guardarTecnico()">✅ Agregar Técnico</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA NORMA/GUÍA -->
+<div class="modal-overlay" id="modal-norma">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📚 Nueva Norma / Guía / Manual</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-norma')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Título / Descripción *</label>
+        <input type="text" id="nn-titulo" placeholder="Ej: Guía de Materiales Educativos DGEA 2026">
+      </div>
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select id="nn-tipo">
+          <option value="">-- Seleccionar --</option>
+          <option>NORMA</option><option>GUÍA</option><option>MANUAL</option>
+          <option>INSTRUCTIVO</option><option>REGLAMENTO</option><option>PROTOCOLO</option><option>CIRCULAR</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Responsable</label>
+        <select id="nn-responsable"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div class="form-group">
+        <label>Versión</label>
+        <input type="text" id="nn-version" placeholder="Ej: v1.0">
+      </div>
+      <div class="form-group">
+        <label>Fecha de Elaboración</label>
+        <input type="date" id="nn-fecha">
+      </div>
+      <div class="form-group">
+        <label>Fecha de Entrega</label>
+        <input type="date" id="nn-entrega">
+      </div>
+      <div class="form-group">
+        <label>Avance</label>
+        <select id="nn-avance">
+          <option value="0">0%</option><option value="10">10%</option><option value="20">20%</option>
+          <option value="30">30%</option><option value="40">40%</option><option value="50">50%</option>
+          <option value="60">60%</option><option value="70">70%</option><option value="80">80%</option>
+          <option value="90">90%</option><option value="100">100%</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="nn-estado">
+          <option>En elaboración</option><option>En revisión</option>
+          <option>Aprobado</option><option>Vigente</option><option>Desactualizado</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Observaciones</label>
+        <textarea id="nn-obs" placeholder="Notas, ubicación del archivo, instrucciones..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-norma')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarNorma()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ARCHIVAR HdR -->
+<div class="modal-overlay" id="modal-archivo">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🗂️ Archivar Hoja de Ruta</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-archivo')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>N° Hoja de Ruta *</label>
+        <select id="arch-hr-sel" onchange="autocompletarHR(this.value)">
+          <option value="">-- Seleccionar HdR pendiente --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>O ingresar N° manualmente</label>
+        <input type="text" id="arch-hr-manual" placeholder="Ej: E-12345/2026">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Descripción / Asunto</label>
+        <input type="text" id="arch-desc" placeholder="Se completa automáticamente al seleccionar HdR">
+      </div>
+      <div class="form-group">
+        <label>Técnico que archivó *</label>
+        <select id="arch-tecnico"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div class="form-group">
+        <label>Motivo de Archivo *</label>
+        <select id="arch-motivo">
+          <option value="">-- Seleccionar --</option>
+          <option>Atendida y concluida</option>
+          <option>Derivada a otro despacho</option>
+          <option>Sin competencia DGEA</option>
+          <option>Duplicada</option>
+          <option>Solicitud retirada</option>
+          <option>Resolución emitida</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha de Archivo *</label>
+        <input type="date" id="arch-fecha">
+      </div>
+      <div class="form-group">
+        <label>Fecha original HdR</label>
+        <input type="date" id="arch-fecha-hr" placeholder="Se completa automáticamente">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Observaciones / Detalle del motivo</label>
+        <textarea id="arch-obs" placeholder="Explique brevemente el motivo de archivo, acciones tomadas, documentos generados..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-archivo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarArchivo()">🗂️ Archivar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO CCTP -->
+<div class="modal-overlay" id="modal-cctp">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🏫 Nuevo CCTP</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-cctp')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nombre CCTP *</label>
+        <input type="text" id="nc-nombre" placeholder="Ej: AUTOESCUELA NACIONAL LPZ">
+      </div>
+      <div class="form-group">
+        <label>Responsable *</label>
+        <select id="nc-responsable"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div class="form-group">
+        <label>N° Hoja de Ruta</label>
+        <input type="text" id="nc-hr" placeholder="Ej: 14937">
+      </div>
+      <div class="form-group">
+        <label>Estado del Trámite</label>
+        <select id="nc-estado">
+          <option>Trámite en elaboración</option><option>Trámite revisado</option>
+          <option>Enviado Departamental</option><option>Trámite en despacho</option><option>Trámite con RM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha de Envío</label>
+        <input type="date" id="nc-fecha">
+      </div>
+      <div class="form-group">
+        <label>Destino</label>
+        <select id="nc-destino">
+          <option value="">-- Seleccionar --</option>
+          <option>Jurídica</option><option>Departamental</option><option>Despacho</option>
+          <option>VEAE</option><option>Viceministro</option><option>Archivo</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Observaciones</label>
+        <input type="text" id="nc-obs" placeholder="Ej: 2DA DEVO, PAGO ARANCELES...">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-cctp')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCCTP()">💾 Guardar CCTP</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CRONOGRAMA DE ACTIVIDADES (por tarea/proyecto) -->
+<div class="modal-overlay" id="modal-cronograma">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="crono-titulo">📅 Cronograma de actividades</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-cronograma')">✕</button>
+    </div>
+    <div id="crono-subtitulo" style="font-size:12px;color:var(--texto-muted);margin-bottom:4px"></div>
+    <div class="crono-progreso-wrap"><div class="crono-progreso-fill" id="crono-progreso-fill" style="width:0%"></div></div>
+    <div id="crono-lista"></div>
+    <div class="crono-add-row">
+      <input type="text" id="crono-nueva-desc" placeholder="Nueva actividad del cronograma...">
+      <input type="date" id="crono-nueva-fecha" style="max-width:150px">
+      <button class="btn btn-primary" style="white-space:nowrap" onclick="agregarSubActividad()">➕ Añadir</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-cronograma')">Cerrar</button>
+      <button class="btn btn-primary" onclick="notificarDesdeCronograma()">🔔 Notificar avance</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AJUSTES DE NOTIFICACIONES -->
+<div class="modal-overlay" id="modal-ajustes">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚙️ Ajustes de notificaciones</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-ajustes')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--texto-muted);margin-bottom:14px">
+      Estos datos se guardan solo en este dispositivo (no se comparten). Necesitas la URL de tu Apps Script publicado como Web App para que la app pueda avisar por Telegram y correo.
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>URL de Apps Script (Web App)</label>
+        <input type="text" id="cfg-script-url" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Chat ID de Telegram (grupo "DGEA notificaciones")</label>
+        <input type="text" id="cfg-chat-id" placeholder="-100xxxxxxxxxx">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Tu nombre (para identificar quién sincronizó)</label>
+        <select id="cfg-usuario"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label><input type="checkbox" id="cfg-sync-activo" style="width:auto;margin-right:6px">Compartir datos en vivo con todo el equipo (misma información en todos los celulares)</label>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label><input type="checkbox" id="cfg-auto-notif" style="width:auto;margin-right:6px">Notificar automáticamente al crear/completar una tarea</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-ajustes')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarConfig()">💾 Guardar ajustes</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="tab-pane active" id="pane-dashboard">
+    <div class="metrics-grid">
+      <div class="metric-card rojo">
+        <div class="metric-num rojo" id="m-vencidas">15</div>
+        <div class="metric-label">🔴 Tareas Vencidas</div>
+      </div>
+      <div class="metric-card azul">
+        <div class="metric-num" id="m-total-tareas">20</div>
+        <div class="metric-label">📋 Total Tareas</div>
+      </div>
+      <div class="metric-card verde">
+        <div class="metric-num verde" id="m-completadas">2</div>
+        <div class="metric-label">✅ Completadas</div>
+      </div>
+      <div class="metric-card naranja">
+        <div class="metric-num naranja" id="m-en-proceso">6</div>
+        <div class="metric-label">🔄 En Proceso</div>
+      </div>
+      <div class="metric-card rojo">
+        <div class="metric-num rojo" id="m-hr-sin-atender">34</div>
+        <div class="metric-label">📄 HdR Urgentes</div>
+      </div>
+      <div class="metric-card azul">
+        <div class="metric-num" id="m-hr-total">90</div>
+        <div class="metric-label">📄 Total HdR</div>
+      </div>
+      <div class="metric-card naranja">
+        <div class="metric-num naranja" id="m-cctp-proceso">49</div>
+        <div class="metric-label">🏫 CCTPs Proceso</div>
+      </div>
+      <div class="metric-card verde">
+        <div class="metric-num verde" id="m-cctp-total">75</div>
+        <div class="metric-label">🏫 Total CCTPs</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;">
+      <!-- Tareas urgentes hoy -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🔴 Tareas Vencidas / Urgentes</h3>
+        </div>
+        <div class="card-body" id="dashboard-urgentes" style="padding:0;">
+          <table>
+            <thead><tr>
+              <th>Técnico</th><th>Tarea</th><th>Estado</th><th>Días</th>
+            </tr></thead>
+            <tbody id="tbody-urgentes"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- HdR por técnico -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📄 Hojas de Ruta por Técnico</h3>
+        </div>
+        <div class="card-body" id="dashboard-hdr" style="padding:0;">
+          <table>
+            <thead><tr>
+              <th>Técnico</th><th>Total HdR</th><th>+10d</th><th>5-10d</th>
+            </tr></thead>
+            <tbody id="tbody-hdr-resumen"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Próximas reuniones -->
+    <div class="card">
+      <div class="card-header" style="justify-content:space-between">
+        <h3>📅 Próximas Reuniones</h3>
+        <button class="btn btn-outline btn-sm" onclick="showTab('reuniones')">Ver todas →</button>
+      </div>
+      <div class="card-body" id="dashboard-reuniones"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAREAS ═══ -->
+  <div class="tab-pane" id="pane-tareas">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-tecnico-tarea" onchange="renderTareas()">
+          <option value="">👥 Todos los técnicos</option>
+        </select>
+        <select id="f-estado-tarea" onchange="renderTareas()">
+          <option value="">📊 Todos los estados</option>
+          <option value="PENDIENTE">⏳ Pendiente</option>
+          <option value="EN PROCESO">🔄 En Proceso</option>
+          <option value="COMPLETADO">✅ Completado</option>
+          <option value="VENCIDA">🔴 Vencida</option>
+        </select>
+        <select id="f-prioridad-tarea" onchange="renderTareas()">
+          <option value="">⚡ Prioridad</option>
+          <option value="ALTA">🔴 Alta</option>
+          <option value="MEDIA">🟡 Media</option>
+          <option value="BAJA">🟢 Baja</option>
+        </select>
+        <input type="text" id="f-buscar-tarea" placeholder="🔍 Buscar..." style="min-width:160px" oninput="renderTareas()">
+      </div>
+      <button class="btn btn-primary" onclick="abrirModal('modal-tarea')">➕ Nueva Tarea</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:30px">#</th>
+            <th>Técnico</th>
+            <th style="min-width:200px">Descripción</th>
+            <th>Tipo</th>
+            <th>Prioridad</th>
+            <th>F. Entrega</th>
+            <th>Días</th>
+            <th>Estado</th>
+            <th>Avance</th>
+            <th>Notif.</th>
+            <th>Acciones</th>
+          </tr></thead>
+          <tbody id="tbody-tareas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REUNIONES ═══ -->
+  <div class="tab-pane" id="pane-reuniones">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-tipo-reunion" onchange="renderReuniones()">
+          <option value="">📋 Todos los tipos</option>
+          <option>INTERNA</option>
+          <option>VEAE</option>
+          <option>VICEMINISTRO</option>
+          <option>EXTERNA</option>
+          <option>COORDINACIÓN</option>
+        </select>
+        <input type="month" id="f-mes-reunion" onchange="renderReuniones()" style="padding:6px 10px; border:1px solid var(--borde); border-radius:8px;">
+      </div>
+      <button class="btn btn-primary" onclick="abrirModal('modal-reunion')">➕ Nueva Reunión</button>
+    </div>
+    <div id="lista-reuniones"></div>
+  </div>
+
+  <!-- ═══ HOJAS DE RUTA ═══ -->
+  <div class="tab-pane" id="pane-hojas-ruta">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><h3>📥 Cargar PDF de Hojas de Ruta</h3></div>
+      <div class="card-body">
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-input').click()" 
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="this.classList.remove('drag-over')">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Arrastra el PDF aquí o haz clic para seleccionar</div>
+          <div class="upload-sub">El sistema extraerá automáticamente las Hojas de Ruta y las integrará a la tabla</div>
+          <input type="file" id="pdf-input" accept=".pdf,.xlsx,.xls,.csv" onchange="procesarArchivo(this)">
+        </div>
+        <div id="pdf-status" style="margin-top:12px; display:none;"></div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-tecnico-hr" onchange="renderHojasRuta()">
+          <option value="">👥 Todos los técnicos</option>
+        </select>
+        <select id="f-estado-hr" onchange="renderHojasRuta()">
+          <option value="">📊 Todos</option>
+          <option value="PENDIENTE">⏳ Pendiente</option>
+          <option value="ATENDIDA">✅ Atendida</option>
+          <option value="DERIVADA">📤 Derivada</option>
+        </select>
+        <input type="text" id="f-buscar-hr" placeholder="🔍 N° HdR o asunto..." style="min-width:160px" oninput="renderHojasRuta()">
+      </div>
+      <span id="hr-contador" style="font-size:12px; color:var(--texto-muted); font-weight:600;"></span>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Hoja de Ruta</th>
+            <th style="min-width:200px">Descripción / Asunto</th>
+            <th>Remitente</th>
+            <th>Técnico Responsable</th>
+            <th>F. Derivación</th>
+            <th>Días sin atención</th>
+            <th>Estado</th>
+            <th>Observaciones</th>
+          </tr></thead>
+          <tbody id="tbody-hr"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CCTPs ═══ -->
+  <div class="tab-pane" id="pane-cctp">
+    <!-- RESUMEN CCTPs -->
+    <div id="cctp-resumen-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;"></div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-resp-cctp" onchange="renderCCTP()">
+          <option value="">👤 Responsable</option>
+        </select>
+        <select id="f-estado-cctp" onchange="renderCCTP()">
+          <option value="">📊 Todos los estados</option>
+          <option>Trámite en elaboración</option>
+          <option>Trámite revisado</option>
+          <option>Enviado Departamental</option>
+          <option>Trámite en despacho</option>
+          <option>Trámite con RM</option>
+        </select>
+        <input type="text" id="f-buscar-cctp" placeholder="🔍 Nombre CCTP..." style="min-width:160px" oninput="renderCCTP()">
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalCCTP()">➕ Nuevo CCTP</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Responsable</th>
+            <th>Hoja de Ruta</th>
+            <th style="min-width:160px">Nombre CCTP</th>
+            <th style="min-width:180px">Estado del Trámite</th>
+            <th>Fecha Envío</th>
+            <th>Días sin mov.</th>
+            <th>Destino</th>
+            <th>Observaciones</th>
+          </tr></thead>
+          <tbody id="tbody-cctp"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NORMAS / GUÍAS ═══ -->
+  <div class="tab-pane" id="pane-normas">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-tipo-norma" onchange="renderNormas()">
+          <option value="">📋 Todos los tipos</option>
+          <option>NORMA</option><option>GUÍA</option><option>MANUAL</option>
+          <option>INSTRUCTIVO</option><option>REGLAMENTO</option><option>PROTOCOLO</option><option>CIRCULAR</option>
+        </select>
+        <select id="f-estado-norma" onchange="renderNormas()">
+          <option value="">📊 Todos</option>
+          <option>En elaboración</option><option>En revisión</option><option>Aprobado</option><option>Vigente</option><option>Desactualizado</option>
+        </select>
+        <input type="text" id="f-buscar-norma" placeholder="🔍 Buscar..." style="min-width:160px" oninput="renderNormas()">
+      </div>
+      <button class="btn btn-primary" onclick="abrirModal('modal-norma')">➕ Nueva Norma/Guía</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Tipo</th><th style="min-width:220px">Título / Descripción</th>
+            <th>Responsable</th><th>Versión</th><th>F. Elaboración</th><th>F. Entrega</th>
+            <th>Días</th><th>Avance</th><th>Estado</th><th>Observaciones</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="tbody-normas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ARCHIVO ═══ -->
+  <div class="tab-pane" id="pane-archivo">
+
+    <!-- Métricas archivo -->
+    <div id="archivo-metricas" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="filtros-bar">
+        <select id="f-motivo-archivo" onchange="renderArchivo()">
+          <option value="">📋 Todos los motivos</option>
+          <option>Atendida y concluida</option>
+          <option>Derivada a otro despacho</option>
+          <option>Sin competencia DGEA</option>
+          <option>Duplicada</option>
+          <option>Solicitud retirada</option>
+          <option>Resolución emitida</option>
+          <option>Otro</option>
+        </select>
+        <select id="f-tecnico-archivo" onchange="renderArchivo()">
+          <option value="">👥 Todos los técnicos</option>
+        </select>
+        <input type="month" id="f-mes-archivo" onchange="renderArchivo()" style="padding:6px 10px;border:1px solid var(--borde);border-radius:8px;font-family:var(--font)">
+        <input type="text" id="f-buscar-archivo" placeholder="🔍 N° HdR o asunto..." style="min-width:160px" oninput="renderArchivo()">
+      </div>
+      <button class="btn btn-primary" onclick="abrirModal('modal-archivo')">🗂️ Archivar Hoja de Ruta</button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>N° Hoja de Ruta</th>
+            <th style="min-width:200px">Descripción / Asunto</th>
+            <th>Técnico que archivó</th>
+            <th>Motivo de Archivo</th>
+            <th>Fecha de Archivo</th>
+            <th>Fecha Original HdR</th>
+            <th>Días que duró</th>
+            <th>Observaciones</th>
+            <th>Acciones</th>
+          </tr></thead>
+          <tbody id="tbody-archivo"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VISTA TÉCNICOS ═══ -->
+  <div class="tab-pane" id="pane-tecnicos-view">
+    <div class="tecnico-tab-bar" id="tecnico-selector"></div>
+    <div id="vista-tecnico-content"></div>
+  </div>
+
+  <!-- ═══ EQUIPO ═══ -->
+  <div class="tab-pane" id="pane-equipo">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+      <button class="btn btn-success" onclick="abrirModal('modal-tecnico')">👤 Agregar Técnico</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th>
+            <th>Nombre Completo</th>
+            <th>Correo Electrónico</th>
+            <th>Teléfono</th>
+            <th>Telegram</th>
+            <th>Especialidad</th>
+            <th>Tareas Asig.</th>
+            <th>Acciones</th>
+          </tr></thead>
+          <tbody id="tbody-equipo"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+var tecnicos = [
+  { id:1, nombre:"VILMA BEATRIZ CHOQUE MARTINEZ", correo:"lucichm1988@gmail.com", tel:"+591 68509008", telegram:"", esp:"Especialista en Políticas de Educación Alternativa No Formal" },
+  { id:2, nombre:"WILMA MALDONADO QUISPE", correo:"maldonado289@gmail.com", tel:"+591 70533613", telegram:"", esp:"Profesional Educación Técnica Humanística" },
+  { id:3, nombre:"MAX MOESES PAUCARA NINA", correo:"maxmoisesdiazpaucara@gmail.com", tel:"+591 70162792", telegram:"", esp:"Profesional Educación Permanente No Escolarizada" },
+  { id:4, nombre:"NATHALIA MEZA LORA", correo:"nathaliaml.edu@gmail.com", tel:"+591 61150418", telegram:"", esp:"Profesional Educación Secundaria de Personas Jóvenes y Adultas" },
+  { id:5, nombre:"MABEL PAMELA PALLI CHACHAJAQUE", correo:"pallimabel29@gmail.com", tel:"+591 77578018", telegram:"", esp:"Técnico Administrativo y Seguimiento del Sistema" },
+  { id:6, nombre:"JASSMANY ISRAEL URIONA HOCHKOFLER", correo:"redencion2020@gmail.com", tel:"+59172875580", telegram:"", esp:"Profesional Gestión Sistema Informático SPCC" },
+  { id:7, nombre:"YANETH FRIDA CONDE KANTUTA", correo:"conde.yaneth.16@gmail.com", tel:"+591 60639176", telegram:"", esp:"Profesional en Gestión Institucional de Educación de Adultos" },
+  { id:8, nombre:"XIMENA AGUIRRE CALAMANI", correo:"ximenaaguirrecalamani@gmail.com", tel:"+591 74034923", telegram:"", esp:"DIRECTORA DGEA" },
+  { id:9, nombre:"ARIEL NINA CHUQUIMIA", correo:"arielabadninachuquimia@gmail.com", tel:"+591 74034924", telegram:"", esp:"Director CEPEAD" }
+];
+
+var tareas = [
+  { id:1, num:1, tipo:"TALLER", ref:"DGEA", tecnico:"MABEL PAMELA PALLI CHACHAJAQUE", desc:"TALLER DE CAPACITACION VMPEYA", prioridad:"🟡 MEDIA", inicio:"2026-04-04", entrega:"2026-04-11", estado:"⏳ PENDIENTE", avance:0.9, notif:"🔴 VENCIDA", obs:"" },
+  { id:2, num:2, tipo:"REUNIÓN", ref:"VEAE", tecnico:"XIMENA AGUIRRE CALAMANI", desc:"ASCENSO DE CATEGORIA 14:00", prioridad:"🟡 MEDIA", inicio:"2026-04-04", entrega:"2026-04-07", estado:"✅ COMPLETADO", avance:1, notif:"✅ OK", obs:"" },
+  { id:3, num:3, tipo:"REUNIÓN", ref:"DGEA", tecnico:"XIMENA AGUIRRE CALAMANI", desc:"ESTANDAR OCUPACIONAL SASTRE 9:00", prioridad:"🟡 MEDIA", inicio:"2026-04-04", entrega:"2026-04-09", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:4, num:4, tipo:"REUNIÓN", ref:"VEAE", tecnico:"MAX MOESES PAUCARA NINA", desc:"PRESENTACION REGLAMENTO FLEXA 16:00", prioridad:"🔴 ALTA", inicio:"2026-02-21", entrega:"2026-04-07", estado:"⏳ PENDIENTE", avance:0.5, notif:"🔴 VENCIDA", obs:"" },
+  { id:5, num:5, tipo:"REUNIÓN", ref:"VEAE", tecnico:"WILMA MALDONADO QUISPE", desc:"SOCILIZACION REGLAMENTO DE BECAS 9:00", prioridad:"🔴 ALTA", inicio:"2026-03-16", entrega:"2026-04-08", estado:"⏳ PENDIENTE", avance:0.7, notif:"🔴 VENCIDA", obs:"" },
+  { id:6, num:6, tipo:"ACTIVIDAD", ref:"DGEA", tecnico:"NATHALIA MEZA LORA", desc:"Cumplir con el requerimiento solicitado por la Dirección de Planificación", prioridad:"🟡 MEDIA", inicio:"2026-03-20", entrega:"2026-04-08", estado:"⏳ PENDIENTE", avance:0.5, notif:"🔴 VENCIDA", obs:"" },
+  { id:7, num:7, tipo:"GUÍA", ref:"DGEA", tecnico:"WILMA MALDONADO QUISPE", desc:"REVISAR LA GUIA DE MATERIALES EDUCATIVOS Y ENVIAR LA VERSION FINAL A EDUARDO DE AYUDA EN ACCIÓN", prioridad:"🟡 MEDIA", inicio:"2026-04-04", entrega:"2026-04-11", estado:"🔄 EN PROCESO", avance:0.7, notif:"🔴 VENCIDA", obs:"" },
+  { id:8, num:8, tipo:"GUÍA", ref:"DGEA", tecnico:"WILMA MALDONADO QUISPE", desc:"REVISION DEL PREP", prioridad:"🟡 MEDIA", inicio:"2026-04-04", entrega:"2026-04-21", estado:"🔄 EN PROCESO", avance:0.9, notif:"🔵 En plazo", obs:"" },
+  { id:9, num:9, tipo:"MANUAL", ref:"DGEA", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", desc:"DAR LA CONTINUIDAD AL MANUAL DE PROCEDIMIENTOS", prioridad:"🔴 ALTA", inicio:"2026-02-21", entrega:"2026-04-11", estado:"🔄 EN PROCESO", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:10, num:10, tipo:"INSTRUCTIVO", ref:"DGEA", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", desc:"PROYECTAR INSTRUCTIVO PARA ACTUALIZACION DE RUES CEAS Y CEAS DE EDUCACION PERMANENTE", prioridad:"🔴 ALTA", inicio:"2026-04-04", entrega:"2026-04-08", estado:"🔄 EN PROCESO", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:11, num:11, tipo:"SEGUIMIENTO", ref:"DGEA", tecnico:"MABEL PAMELA PALLI CHACHAJAQUE", desc:"REALIZAR SEGUIMIENTO A HOJA DE RUTA PARA PASANTES Y MEMO DE RESPONSABLE INTERINO", prioridad:"🔴 ALTA", inicio:"2026-04-04", entrega:"2026-04-28", estado:"🔄 EN PROCESO", avance:0, notif:"🔵 En plazo", obs:"" },
+  { id:12, num:12, tipo:"REUNIÓN", ref:"VEAE", tecnico:"MABEL PAMELA PALLI CHACHAJAQUE", desc:"REUNION SOCILIZACION CRONOGRAMA Y PLAN DE IMPLEMENTACION NUEVO SISTEMA SPCC", prioridad:"🟡 MEDIA", inicio:"2026-03-19", entrega:"2026-04-09", estado:"🔄 EN PROCESO", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:13, num:13, tipo:"DOC", ref:"DGEA", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", desc:"Elaborar el cronograma anual de los operativos SIE de toda la gestión", prioridad:"🟡 MEDIA", inicio:"2026-04-07", entrega:"2026-04-09", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:14, num:14, tipo:"", ref:"DGEA", tecnico:"WILMA MALDONADO QUISPE", desc:"Coordinar con Ayuda en Acción el seguimiento de los talleres grabados en Tarija y Beni", prioridad:"🟢 BAJA", inicio:"2026-05-25", entrega:"2026-06-06", estado:"⏳ PENDIENTE", avance:0, notif:"🟠 MAÑANA", obs:"" },
+  { id:15, num:15, tipo:"", ref:"DGEA", tecnico:"MAX MOESES PAUCARA NINA", desc:"Designar a Carlos (CEPEAD) para el seguimiento de la aplicación offline enviada al SIE", prioridad:"🟡 MEDIA", inicio:"2026-04-07", entrega:"2026-04-09", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:16, num:16, tipo:"", ref:"", tecnico:"NATHALIA MEZA LORA", desc:"Realizar el informe de las hojas de ruta de Bono ZONA que ingresaron a la DGEA", prioridad:"🟡 MEDIA", inicio:"2026-04-08", entrega:"2026-04-08", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:17, num:17, tipo:"", ref:"", tecnico:"JASSMANY ISRAEL URIONA HOCHKOFLER", desc:"Remitir la nómina de estándares vigentes del SPCC.", prioridad:"🔴 ALTA", inicio:"2026-04-07", entrega:"2026-04-07", estado:"✅ COMPLETADO", avance:1, notif:"✅ OK", obs:"" },
+  { id:18, num:18, tipo:"", ref:"", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", desc:"Coordinar con SIE: Circular para solicitud de requisitos a CCTPs", prioridad:"🔴 ALTA", inicio:"2026-04-07", entrega:"2026-04-10", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" },
+  { id:19, num:19, tipo:"", ref:"", tecnico:"MAX MOESES PAUCARA NINA", desc:"Consolidar la reunión", prioridad:"", inicio:"", entrega:"", estado:"⏳ PENDIENTE", avance:0, notif:"🔵 En plazo", obs:"" },
+  { id:20, num:20, tipo:"", ref:"", tecnico:"JASSMANY ISRAEL URIONA HOCHKOFLER", desc:"Realizar infografía de SPCC en coordinación con UNICON para publicarlo en redes sociales", prioridad:"🟡 MEDIA", inicio:"2026-04-08", entrega:"2026-04-10", estado:"⏳ PENDIENTE", avance:0, notif:"🔴 VENCIDA", obs:"" }
+];
+
+var reuniones = [
+  { id:1, desc:"REUNION INTERNA DGEA – Revisión POA semanal", fecha:"2026-06-09", hora:"09:00", lugar:"Sala DGEA", tipo:"INTERNA", participantes:["VILMA BEATRIZ CHOQUE MARTINEZ","WILMA MALDONADO QUISPE","MAX MOESES PAUCARA NINA"], agenda:"1. Avance de tareas\n2. Pendientes de la semana\n3. Coordinación CCTP" },
+  { id:2, desc:"REUNION VEAE – Reglamento Flexa", fecha:"2026-06-11", hora:"16:00", lugar:"VEAE", tipo:"VEAE", participantes:["MAX MOESES PAUCARA NINA","XIMENA AGUIRRE CALAMANI"], agenda:"Presentación Reglamento Flexa al Viceministro" },
+  { id:3, desc:"COORDINACIÓN Ayuda en Acción – Talleres Tarija y Beni", fecha:"2026-06-12", hora:"10:00", lugar:"Virtual", tipo:"COORDINACIÓN", participantes:["WILMA MALDONADO QUISPE"], agenda:"Seguimiento talleres grabados" }
+];
+
+var hojasRuta = [
+  { id:1, hr:"I-27723/2026", desc:"INFORME AVANCES DGEA", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"ANGELA DANIELLA GARCIA MORENO", fecha:"2026-05-29", dias:7, estado:"⏳ PENDIENTE", correo:"angela.garcia@minedu.gob.bo", obs:"" },
+  { id:2, hr:"E-27614/2026", desc:"SOLICITUD MODIFICACION CALIFICACIONES 2023 Y 2025 SIE ALTERNATIVA", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", fecha:"2026-05-29", dias:7, estado:"⏳ PENDIENTE", correo:"lucichm1988@gmail.com", obs:"" },
+  { id:3, hr:"I-27606/2026", desc:"SOLICITUD INFORMACIÓN RESPALDO DOCUMENTAL PIE D-QTE8PZ", remitente:"VILMA BEATRIZ CHOQUE MARTINEZ", tecnico:"XIMENA AGUIRRE CALAMANI", fecha:"2026-05-29", dias:7, estado:"⏳ PENDIENTE", correo:"ximenaaguirrecalamani@gmail.com", obs:"" },
+  { id:4, hr:"E-27382/2026", desc:"ELIMINACION DE NOTAS DUPLICADAS CEA LA PAZ II", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"lucichm1988@gmail.com", obs:"" },
+  { id:5, hr:"E-27378/2026", desc:"SOLICITUD MODIFICACION CALIFICACIONES R.M. 800/2015", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"lucichm1988@gmail.com", obs:"" },
+  { id:6, hr:"E-27123/2026", desc:"INFORMACION VENCIMIENTO R.M. CENTRO CAPACITACION TECNICA", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:7, hr:"E-27080/2026", desc:"PROYECTO NUEVA CREACION CCTP MARYLIN", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"WILMA MALDONADO QUISPE", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"maldonado289@gmail.com", obs:"" },
+  { id:8, hr:"E-27061/2026", desc:"REMISION CARPETAS EVALUADAS RUBROS IMPRESION CERTIFICADOS", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"MABEL PAMELA PALLI CHACHAJAQUE", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"pallimabel29@gmail.com", obs:"" },
+  { id:9, hr:"E-26785/2026", desc:"SOLICITUD INFORMACIÓN 8VO INFORME CEDAW", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-27", dias:9, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:10, hr:"E-26552/2026", desc:"PROYECTO CCTP PELUSA", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-22", dias:14, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:11, hr:"E-26391/2026", desc:"PROYECTO CCTP GARIBALDY", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-26", dias:10, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:12, hr:"E-26259/2026", desc:"INFORME RESPALDO LEGAL TRAMITES NO REGULADOS SUBSISTEMA", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", fecha:"2026-05-22", dias:14, estado:"⏳ PENDIENTE", correo:"lucichm1988@gmail.com", obs:"" },
+  { id:13, hr:"E-26183/2026", desc:"SUBSANACION CAMBIO DOMICILIO CCTP AUTOESCUELA NACIONAL", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-22", dias:14, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:14, hr:"E-25764/2026", desc:"INFORME PEI CCTP VANGUARDIA CLAUE F.S.", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-20", dias:16, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:15, hr:"E-25665/2026", desc:"INSPECCION OCULAR CCTP AUTOESCUELA ALTOQUE", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"NATHALIA MEZA LORA", fecha:"2026-05-20", dias:16, estado:"⏳ PENDIENTE", correo:"nathaliaml.edu@gmail.com", obs:"" },
+  { id:16, hr:"E-25565/2026", desc:"CAMBIO DATOS PERSONALES CERTIFICADO SPCC", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"JASSMANY ISRAEL URIONA HOCHKOFLER", fecha:"2026-05-20", dias:16, estado:"⏳ PENDIENTE", correo:"redencion2020@gmail.com", obs:"" },
+  { id:17, hr:"E-27220/2026", desc:"RESTITUCION HISTORIAL ACADEMICO SIE ALTERNATIVA MABEL PAÑO", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"WILMA MALDONADO QUISPE", fecha:"2026-05-28", dias:8, estado:"⏳ PENDIENTE", correo:"maldonado289@gmail.com", obs:"" },
+  { id:18, hr:"I-24557/2026", desc:"VERIFICACION DATOS SISTEMA SEP CERTIFICACION SPCC", remitente:"XIMENA AGUIRRE CALAMANI", tecnico:"MABEL PAMELA PALLI CHACHAJAQUE", fecha:"2026-05-20", dias:16, estado:"⏳ PENDIENTE", correo:"pallimabel29@gmail.com", obs:"" }
+];
+
+var cctps = [
+  { id:1, responsable:"Carla", hr:"14937", nombre:"STARD LPZ", estado:"Trámite en despacho", fechaEnvio:"2026-05-16", dias:20, obs:"Juridica" },
+  { id:2, responsable:"Carla", hr:"16679", nombre:"CONECTA CBBA", estado:"Trámite en despacho", fechaEnvio:"2026-05-16", dias:20, obs:"Juridica" },
+  { id:3, responsable:"Alvaro y Carla", hr:"12830", nombre:"IEDUCA LPZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-19", dias:17, obs:"2DA DEVO" },
+  { id:4, responsable:"Carla", hr:"17289", nombre:"CEDITEC CBBA", estado:"Enviado Departamental", fechaEnvio:"2026-05-19", dias:17, obs:"3ERA DEVO" },
+  { id:5, responsable:"Maritza y Carla", hr:"5226 Y 19930", nombre:"MADRID SCZ", estado:"Trámite en elaboración", fechaEnvio:"2026-05-19", dias:17, obs:"PAGO ARANCELES" },
+  { id:6, responsable:"Limbert", hr:"6924", nombre:"MAVI OR", estado:"Enviado Departamental", fechaEnvio:"2026-05-20", dias:16, obs:"2DA DEVO" },
+  { id:7, responsable:"Cinthya", hr:"7937", nombre:"GOCAR SCZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-26", dias:10, obs:"2DA DEVO" },
+  { id:8, responsable:"Alvaro", hr:"19151", nombre:"AMIGOS SOBRE RUEDAS LPZ", estado:"Trámite revisado", fechaEnvio:"—", dias:0, obs:"" },
+  { id:9, responsable:"Juana", hr:"7939", nombre:"AMELCARS SCZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-30", dias:6, obs:"3RA DEV" },
+  { id:10, responsable:"Jaime", hr:"9564", nombre:"BOLIVIANA DE MOTOCICLISMO", estado:"Enviado Departamental", fechaEnvio:"2026-05-30", dias:6, obs:"2DA DEV" },
+  { id:11, responsable:"Carlos", hr:"10589", nombre:"ICAE CBBA", estado:"Trámite revisado", fechaEnvio:"—", dias:0, obs:"2DA DEV" },
+  { id:12, responsable:"Maria Cristina", hr:"10576", nombre:"ICRECIMIENTO.NET CBBA", estado:"Trámite en elaboración", fechaEnvio:"2026-05-30", dias:6, obs:"PAGO ARANCELES+MULTA" },
+  { id:13, responsable:"Carla", hr:"20102", nombre:"VANGUARDIA CLAURE LPZ", estado:"Trámite en elaboración", fechaEnvio:"2026-05-19", dias:17, obs:"PAGO ARANCELES" },
+  { id:14, responsable:"Maritza", hr:"10743", nombre:"VIANDIÑA CBBA", estado:"Enviado Departamental", fechaEnvio:"2026-05-30", dias:6, obs:"2DA DEV" },
+  { id:15, responsable:"Maria Cristina", hr:"11010", nombre:"KOLPING PND", estado:"Enviado Departamental", fechaEnvio:"2026-05-30", dias:6, obs:"1RA DEV" },
+  { id:16, responsable:"Carlos", hr:"12630", nombre:"INTEGRALMONACO LPZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-28", dias:8, obs:"1ra DEV" },
+  { id:17, responsable:"Jaime", hr:"3030", nombre:"WUILLMAN OR", estado:"Enviado Departamental", fechaEnvio:"2026-05-30", dias:6, obs:"2DA DEV" },
+  { id:18, responsable:"Juana", hr:"13771", nombre:"DALAS CBBA", estado:"Enviado Departamental", fechaEnvio:"2026-05-28", dias:8, obs:"3era DEV" },
+  { id:19, responsable:"Limbert", hr:"10999", nombre:"COGNOS SCZ", estado:"Trámite revisado", fechaEnvio:"—", dias:0, obs:"" },
+  { id:20, responsable:"Carla", hr:"17547", nombre:"REY CAR OR", estado:"Enviado Departamental", fechaEnvio:"2026-05-28", dias:8, obs:"2DA DEV" },
+  { id:21, responsable:"Carla", hr:"16036", nombre:"RUTA ANDINA LPZ", estado:"Trámite con RM", fechaEnvio:"2026-05-19", dias:17, obs:"CERTIFICADO FUNC." },
+  { id:22, responsable:"Carlos y Maritza", hr:"20520", nombre:"LISBOA LPZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-26", dias:10, obs:"1RA DEVO" },
+  { id:23, responsable:"Carla", hr:"15979", nombre:"CODASUR SCZ", estado:"Enviado Departamental", fechaEnvio:"2026-05-21", dias:15, obs:"1a DEVO DOMICILIO" }
+];
+
+var nextTareaId = 21, nextReunionId = 4, nextHrId = 19, nextCctpId = 24, nextTecnicoId = 10;
+tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+var nextSubtareaId = 1;
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  cargarLocal();
+  cargarConfig();
+  if(config.syncActivo) sincronizarAhora(false);
+  var hoy = new Date();
+  document.getElementById('badge-fecha').textContent = '📅 ' + hoy.toLocaleDateString('es-BO');
+  document.getElementById('t-inicio').value = hoy.toISOString().split('T')[0];
+  document.getElementById('r-fecha').value = hoy.toISOString().split('T')[0];
+
+  var mesActual = hoy.toISOString().slice(0,7);
+  document.getElementById('f-mes-reunion').value = mesActual;
+
+  poblarSelects();
+  poblarSelectHRArchivo();
+  document.getElementById('arch-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-mes-archivo').value = new Date().toISOString().slice(0,7);
+  renderDashboard();
+  renderTareas();
+  renderReuniones();
+  renderHojasRuta();
+  renderNormas();
+  renderCCTP();
+  renderArchivo();
+  renderEquipo();
+  renderTecnicoSelector();
+}
+
+function poblarSelects() {
+  var nombres = tecnicos.map(function(t){ return t.nombre; });
+
+  ['f-tecnico-tarea','f-tecnico-hr','t-tecnico','nn-responsable','nc-responsable','arch-tecnico','f-tecnico-archivo'].forEach(function(id){
+    var sel = document.getElementById(id);
+    if(!sel) return;
+    var base = sel.options[0];
+    sel.innerHTML = '';
+    sel.appendChild(base);
+    nombres.forEach(function(n){
+      var o = new Option(n, n);
+      sel.appendChild(o);
+    });
+  });
+
+  // Responsables únicos para filtro CCTP
+  var selRespCCTP = document.getElementById('f-resp-cctp');
+  if(selRespCCTP){
+    var resps = [];
+    cctps.forEach(function(c){ if(c.responsable && resps.indexOf(c.responsable)===-1) resps.push(c.responsable); });
+    selRespCCTP.innerHTML = '<option value="">👤 Responsable</option>';
+    resps.sort().forEach(function(r){ selRespCCTP.appendChild(new Option(r,r)); });
+  }
+
+  // Participantes en modal reunión
+  var cont = document.getElementById('r-participantes-check');
+  if(cont){
+    cont.innerHTML = '';
+    nombres.forEach(function(n){
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:#F5F7FA;padding:4px 8px;border-radius:6px;border:1px solid var(--borde)';
+      lbl.innerHTML = '<input type="checkbox" value="'+n+'"> '+n.split(' ')[0];
+      cont.appendChild(lbl);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('pane-'+id).classList.add('active');
+  var tabs = document.querySelectorAll('.nav-tab');
+  var map = { dashboard:0, tareas:1, reuniones:2, normas:3, 'hojas-ruta':4, cctp:5, archivo:6, 'tecnicos-view':7, equipo:8 };
+  if(map[id] !== undefined) tabs[map[id]].classList.add('active');
+  if(id === 'tecnicos-view') renderVistaTecnico(tecnicos[0].nombre);
+  if(id === 'cctp') renderResumenCCTP();
+  if(id === 'archivo') renderArchivo();
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function fmtFecha(str) {
+  if(!str || str === '—') return '—';
+  var d = new Date(str);
+  if(isNaN(d)) return str;
+  return d.toLocaleDateString('es-BO', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+function diasRestantes(entrega) {
+  if(!entrega) return null;
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var fEnt = new Date(entrega); fEnt.setHours(0,0,0,0);
+  return Math.round((fEnt - hoy) / 86400000);
+}
+function pillEstado(estado) {
+  var clases = { '✅ COMPLETADO':'completado','🔄 EN PROCESO':'proceso','⏳ PENDIENTE':'pendiente','⏸ PAUSADO':'cancelado','❌ CANCELADO':'cancelado' };
+  var c = clases[estado] || 'pendiente';
+  return '<span class="pill pill-'+c+'">'+estado+'</span>';
+}
+function pillPrioridad(p) {
+  if(!p) return '—';
+  var c = p.indexOf('ALTA')>-1?'alta':p.indexOf('MEDIA')>-1?'media':'baja';
+  return '<span class="pill pill-'+c+'">'+p+'</span>';
+}
+function pillNotif(n) {
+  if(!n) return '—';
+  var clases = { '🔴 VENCIDA':'vencida','✅ OK':'completado','🔵 En plazo':'plazo','🟡 PRONTO':'media','🟠 MAÑANA':'mañana','🔴 HOY':'hoy' };
+  var c = clases[n] || 'pendiente';
+  return '<span class="pill pill-'+c+'">'+n+'</span>';
+}
+function primerasLetras(nombre) {
+  var parts = nombre.trim().split(' ');
+  return (parts[0][0]||'') + (parts[1] ? parts[1][0] : '');
+}
+function showToast(msg, ok) {
+  var t = document.getElementById('toast');
+  t.textContent = (ok!==false ? '✅ ' : '❌ ') + msg;
+  t.style.background = ok!==false ? '#276221' : '#C00000';
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  var vencidas = tareas.filter(function(t){ return t.notif && t.notif.indexOf('VENCIDA')>-1 && t.estado !== '✅ COMPLETADO'; });
+  var completadas = tareas.filter(function(t){ return t.estado === '✅ COMPLETADO'; });
+  var proceso = tareas.filter(function(t){ return t.estado === '🔄 EN PROCESO'; });
+
+  document.getElementById('m-vencidas').textContent = vencidas.length;
+  document.getElementById('m-total-tareas').textContent = tareas.length;
+  document.getElementById('m-completadas').textContent = completadas.length;
+  document.getElementById('m-en-proceso').textContent = proceso.length;
+  document.getElementById('badge-urgentes').textContent = '⚠ '+vencidas.length+' vencidas';
+
+  var hdr_rojo = hojasRuta.filter(function(h){ return h.dias > 10; }).length;
+  document.getElementById('m-hr-sin-atender').textContent = hdr_rojo;
+  document.getElementById('m-hr-total').textContent = hojasRuta.length;
+  document.getElementById('m-cctp-proceso').textContent = cctps.filter(function(c){ return c.estado.indexOf('elaboración')>-1 || c.estado.indexOf('Departamental')>-1 || c.estado.indexOf('despacho')>-1; }).length;
+  document.getElementById('m-cctp-total').textContent = cctps.length;
+
+  // Tabla urgentes
+  var tbody = document.getElementById('tbody-urgentes');
+  tbody.innerHTML = '';
+  vencidas.slice(0,8).forEach(function(t){
+    var dias = diasRestantes(t.entrega);
+    var diasStr = dias !== null ? (dias < 0 ? Math.abs(dias)+' días VENCIDA' : dias+'d') : '—';
+    tbody.innerHTML += '<tr><td style="font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.tecnico.split(' ')[0]+' '+t.tecnico.split(' ')[1]+'</td><td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.desc+'</td><td>'+pillEstado(t.estado)+'</td><td class="sem-rojo" style="font-size:11px">'+diasStr+'</td></tr>';
+  });
+  if(!vencidas.length) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--verde);font-weight:700">✅ No hay tareas vencidas</td></tr>';
+
+  // HdR por técnico — solo técnicos registrados en el equipo
+  var tbody2 = document.getElementById('tbody-hdr-resumen');
+  tbody2.innerHTML = '';
+  var nombresEquipo = tecnicos.map(function(t){ return t.nombre; });
+  var hdrMap = {};
+  hojasRuta.forEach(function(h){
+    if(nombresEquipo.indexOf(h.tecnico) === -1) return; // ignorar externos
+    if(!hdrMap[h.tecnico]) hdrMap[h.tecnico] = { total:0, rojo:0, amarillo:0 };
+    hdrMap[h.tecnico].total++;
+    if(h.dias > 10) hdrMap[h.tecnico].rojo++;
+    else if(h.dias >= 5) hdrMap[h.tecnico].amarillo++;
+  });
+  Object.keys(hdrMap).sort().forEach(function(tec){
+    var d = hdrMap[tec];
+    var nombre = tec.split(' ')[0]+' '+tec.split(' ')[1];
+    tbody2.innerHTML += '<tr><td style="font-size:11px">'+nombre+'</td><td style="font-weight:700;text-align:center">'+d.total+'</td><td class="sem-rojo" style="text-align:center;font-weight:700">'+d.rojo+'</td><td class="sem-amarillo" style="text-align:center;font-weight:700">'+d.amarillo+'</td></tr>';
+  });
+  if(!Object.keys(hdrMap).length) tbody2.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--texto-muted)">Sin hojas de ruta asignadas</td></tr>';
+
+  // Próximas reuniones
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var proximas = reuniones.filter(function(r){ return new Date(r.fecha) >= hoy; }).sort(function(a,b){ return new Date(a.fecha)-new Date(b.fecha); }).slice(0,3);
+  var contR = document.getElementById('dashboard-reuniones');
+  if(!proximas.length) {
+    contR.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No hay reuniones próximas programadas</p></div>';
+    return;
+  }
+  contR.innerHTML = proximas.map(function(r){
+    var d = new Date(r.fecha);
+    var dia = d.getDate().toString().padStart(2,'0');
+    var mes = d.toLocaleDateString('es-BO',{month:'short'}).toUpperCase().replace('.','');
+    var parts = r.participantes && r.participantes.length ? r.participantes.map(function(p){ return p.split(' ')[0]; }).join(', ') : '—';
+    return '<div class="reunion-card"><div class="reunion-fecha-box"><div class="reunion-dia">'+dia+'</div><div class="reunion-mes">'+mes+'</div></div><div class="reunion-info"><div class="reunion-titulo">'+r.desc+'</div><div class="reunion-meta"><span>🕐 '+r.hora+'</span><span>📍 '+r.lugar+'</span><span>👥 '+parts+'</span><span><span class="pill pill-proceso">'+r.tipo+'</span></span></div></div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// TAREAS
+// ═══════════════════════════════════════════════════════
+function renderTareas() {
+  var fTec = document.getElementById('f-tecnico-tarea').value;
+  var fEst = document.getElementById('f-estado-tarea').value.toUpperCase();
+  var fPri = document.getElementById('f-prioridad-tarea').value.toUpperCase();
+  var fBus = document.getElementById('f-buscar-tarea').value.toLowerCase();
+
+  var filt = tareas.filter(function(t){
+    if(fTec && t.tecnico !== fTec) return false;
+    if(fEst && t.estado.toUpperCase().indexOf(fEst) === -1) return false;
+    if(fPri && (!t.prioridad || t.prioridad.toUpperCase().indexOf(fPri) === -1)) return false;
+    if(fBus && t.desc.toLowerCase().indexOf(fBus) === -1 && t.tecnico.toLowerCase().indexOf(fBus) === -1) return false;
+    return true;
+  });
+
+  var tbody = document.getElementById('tbody-tareas');
+  tbody.innerHTML = '';
+  if(!filt.length){
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
+    return;
+  }
+  filt.forEach(function(t){
+    var dias = diasRestantes(t.entrega);
+    var diasCls = dias === null ? '' : dias < 0 ? 'sem-rojo' : dias <= 1 ? 'sem-amarillo' : 'sem-verde';
+    var diasStr = dias === null ? '—' : dias < 0 ? Math.abs(dias)+'d venc.' : dias === 0 ? 'HOY' : dias+'d';
+    var avPct = Math.round((t.avance||0)*100);
+    var avCls = avPct >= 100 ? 'completo' : t.prioridad && t.prioridad.indexOf('ALTA')>-1 ? 'alta' : '';
+
+    var selTec = '<select onchange="cambiarCampoTarea('+t.id+',\'tecnico\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:130px">'+
+      tecnicos.map(function(tc){ return '<option value="'+tc.nombre+'"'+(t.tecnico===tc.nombre?' selected':'')+'>'+tc.nombre.split(' ')[0]+' '+tc.nombre.split(' ')[1]+'</option>'; }).join('')+'</select>';
+
+    var selTipo = '<select onchange="cambiarCampoTarea('+t.id+',\'tipo\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px">'+
+      ['','REUNIÓN','TALLER','GUÍA','MANUAL','INSTRUCTIVO','INFORME','DOCUMENTO','SEGUIMIENTO','ACTIVIDAD'].map(function(x){ return '<option'+(t.tipo===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+
+    var selPrio = '<select onchange="cambiarCampoTarea('+t.id+',\'prioridad\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600">'+
+      ['🔴 ALTA','🟡 MEDIA','🟢 BAJA'].map(function(x){ return '<option'+(t.prioridad===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+
+    var selEst = '<select onchange="cambiarCampoTarea('+t.id+',\'estado\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600">'+
+      ['⏳ PENDIENTE','🔄 EN PROCESO','✅ COMPLETADO','⏸ PAUSADO','❌ CANCELADO'].map(function(x){ return '<option'+(t.estado===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+
+    var selAv = '<select onchange="cambiarCampoTarea('+t.id+',\'avance\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px">'+
+      ['0%','10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'].map(function(x){ return '<option'+(avPct+'%'===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+
+    var row = '<tr class="'+(t.estado==='✅ COMPLETADO'?'completado':'')+'">'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+t.num+'</td>'+
+      '<td>'+selTec+'</td>'+
+      '<td style="max-width:220px;font-size:12px;'+(t.estado==='✅ COMPLETADO'?'text-decoration:line-through;color:#888':'')+'">'+t.desc+'</td>'+
+      '<td>'+selTipo+'</td>'+
+      '<td>'+selPrio+'</td>'+
+      '<td style="white-space:nowrap;font-size:11px"><input type="date" value="'+(t.entrega||'')+'" onchange="cambiarCampoTarea('+t.id+',\'entrega\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
+      '<td class="'+diasCls+'" style="font-weight:700;font-size:12px;white-space:nowrap">'+diasStr+'</td>'+
+      '<td>'+selEst+'</td>'+
+      '<td style="min-width:110px">'+selAv+'<div class="avance-bar" style="margin-top:3px"><div class="avance-fill '+avCls+'" style="width:'+avPct+'%"></div></div></td>'+
+      '<td>'+pillNotif(t.notif)+'</td>'+
+      '<td class="row-actions">'+
+        '<button class="btn-icon" title="Cronograma de actividades" onclick="abrirCronograma('+t.id+')">📅</button>'+
+        '<button class="btn-icon" title="Notificar por Telegram/correo" onclick="notificarTarea('+t.id+')">🔔</button>'+
+        '<button class="btn-icon" title="Eliminar" onclick="eliminarTarea('+t.id+')" style="color:var(--rojo)">🗑</button>'+
+      '</td>'+
+    '</tr>';
+    tbody.innerHTML += row;
+  });
+}
+
+function cambiarCampoTarea(id, campo, val) {
+  var t = tareas.find(function(x){ return x.id===id; });
+  if(!t) return;
+  if(campo === 'avance') { t.avance = parseInt(val)/100; if(t.avance===1){ t.estado='✅ COMPLETADO'; t.notif='✅ OK'; if(config.autoNotif) notificarTarea(t.id); } }
+  else if(campo === 'estado') {
+    t.estado = val;
+    if(val==='✅ COMPLETADO'){ t.avance=1; t.notif='✅ OK'; if(config.autoNotif) notificarTarea(t.id); }
+    else if(val==='🔄 EN PROCESO') t.notif='🔵 En plazo';
+    else if(val==='❌ CANCELADO') t.notif='—';
+  }
+  else if(campo === 'entrega') { t.entrega = val; var d=diasRestantes(val); t.notif = d===null?'':d<0?'🔴 VENCIDA':d===0?'🔴 HOY':d===1?'🟠 MAÑANA':d<=3?'🟡 PRONTO':'🔵 En plazo'; }
+  else t[campo] = val;
+  renderDashboard();
+  // Re-render sin perder foco: solo actualiza dias y notif visualmente
+  var allRows = document.querySelectorAll('#tbody-tareas tr');
+  // simplemente refrescamos
+  renderTareas();
+  showToast('✏️ Actualizado');
+}
+
+function cambiarEstado(id, nuevoEstado) {
+  var t = tareas.find(function(x){ return x.id === id; });
+  if(!t) return;
+  t.estado = nuevoEstado;
+  if(nuevoEstado === '✅ COMPLETADO') { t.avance = 1; t.notif = '✅ OK'; }
+  else if(nuevoEstado === '🔄 EN PROCESO') t.notif = t.notif && t.notif.indexOf('VENCIDA')>-1 ? t.notif : '🔵 En plazo';
+  renderTareas();
+  renderDashboard();
+  showToast('Estado actualizado');
+}
+
+function eliminarTarea(id) {
+  if(!confirm('¿Eliminar esta tarea?')) return;
+  tareas = tareas.filter(function(t){ return t.id !== id; });
+  renderTareas(); renderDashboard();
+  showToast('Tarea eliminada');
+}
+
+function guardarTarea() {
+  var desc = document.getElementById('t-desc').value.trim();
+  var tec = document.getElementById('t-tecnico').value;
+  var entrega = document.getElementById('t-entrega').value;
+  if(!desc || !tec || !entrega) { alert('Por favor complete los campos obligatorios (*)'); return; }
+
+  var dias = diasRestantes(entrega);
+  var notif = dias === null ? '' : dias < 0 ? '🔴 VENCIDA' : dias === 0 ? '🔴 HOY' : dias === 1 ? '🟠 MAÑANA' : dias <= 3 ? '🟡 PRONTO' : '🔵 En plazo';
+
+  tareas.push({
+    id: nextTareaId++,
+    num: tareas.length + 1,
+    tipo: document.getElementById('t-tipo').value,
+    ref: document.getElementById('t-ref').value.trim(),
+    tecnico: tec,
+    desc: desc,
+    prioridad: document.getElementById('t-prioridad').value,
+    inicio: document.getElementById('t-inicio').value,
+    entrega: entrega,
+    estado: '⏳ PENDIENTE',
+    avance: 0,
+    notif: notif,
+    obs: document.getElementById('t-obs').value.trim(),
+    subtareas: []
+  });
+
+  cerrarModal('modal-tarea');
+  limpiarFormTarea();
+  renderTareas(); renderDashboard();
+  showToast('Tarea creada correctamente');
+}
+
+function limpiarFormTarea() {
+  ['t-desc','t-tipo','t-ref','t-obs'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('t-tecnico').value = '';
+  document.getElementById('t-prioridad').value = '🟡 MEDIA';
+  document.getElementById('t-inicio').value = new Date().toISOString().split('T')[0];
+  document.getElementById('t-entrega').value = '';
+}
+
+// ═══════════════════════════════════════════════════════
+// REUNIONES
+// ═══════════════════════════════════════════════════════
+function renderReuniones() {
+  var fTipo = document.getElementById('f-tipo-reunion').value;
+  var fMes = document.getElementById('f-mes-reunion').value;
+
+  var filt = reuniones.filter(function(r){
+    if(fTipo && r.tipo !== fTipo) return false;
+    if(fMes && r.fecha.slice(0,7) !== fMes) return false;
+    return true;
+  }).sort(function(a,b){ return new Date(a.fecha)-new Date(b.fecha); });
+
+  var cont = document.getElementById('lista-reuniones');
+  if(!filt.length){
+    cont.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No hay reuniones en este período. Agrega una nueva.</p></div>';
+    return;
+  }
+  cont.innerHTML = filt.map(function(r){
+    var d = new Date(r.fecha+'T12:00:00');
+    var dia = d.getDate().toString().padStart(2,'0');
+    var mes = d.toLocaleDateString('es-BO',{month:'short'}).toUpperCase().replace('.','');
+    var dia_semana = d.toLocaleDateString('es-BO',{weekday:'long'});
+    var parts = r.participantes && r.participantes.length ? r.participantes.map(function(p){ return p.split(' ')[0]; }).join(', ') : 'Por definir';
+    var colores = { INTERNA:'#1F4E79', VEAE:'#7030A0', VICEMINISTRO:'#843C0C', EXTERNA:'#375623', COORDINACIÓN:'#1F4E79' };
+    var col = colores[r.tipo] || '#1F4E79';
+    return '<div class="reunion-card" style="border-left:4px solid '+col+'">'+
+      '<div class="reunion-fecha-box" style="background:'+col+'">'+
+        '<div class="reunion-dia">'+dia+'</div>'+
+        '<div class="reunion-mes">'+mes+'</div>'+
+      '</div>'+
+      '<div class="reunion-info">'+
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+          '<div class="reunion-titulo">'+r.desc+'</div>'+
+          '<span class="pill" style="background:'+col+'22;color:'+col+';font-size:10px;border:1px solid '+col+'44">'+r.tipo+'</span>'+
+        '</div>'+
+        '<div class="reunion-meta">'+
+          '<span>📅 '+dia_semana+'</span>'+
+          '<span>🕐 '+r.hora+'</span>'+
+          '<span>📍 '+(r.lugar||'Por definir')+'</span>'+
+          '<span>👥 '+parts+'</span>'+
+        '</div>'+
+        (r.agenda ? '<div style="margin-top:6px;font-size:11px;color:var(--texto-muted);background:#F5F7FA;padding:6px 10px;border-radius:6px;border:1px solid var(--borde)">📋 '+r.agenda.replace(/\n/g,' · ')+'</div>' : '')+
+      '</div>'+
+      '<button class="btn-icon" onclick="eliminarReunion('+r.id+')" style="color:var(--rojo);margin-left:auto">🗑</button>'+
+    '</div>';
+  }).join('');
+}
+
+function guardarReunion() {
+  var desc = document.getElementById('r-desc').value.trim();
+  var fecha = document.getElementById('r-fecha').value;
+  if(!desc || !fecha) { alert('Describa la reunión y seleccione una fecha'); return; }
+
+  var participantes = [];
+  document.querySelectorAll('#r-participantes-check input:checked').forEach(function(inp){ participantes.push(inp.value); });
+
+  reuniones.push({
+    id: nextReunionId++,
+    desc: desc,
+    fecha: fecha,
+    hora: document.getElementById('r-hora').value || '09:00',
+    lugar: document.getElementById('r-lugar').value.trim() || 'DGEA',
+    tipo: document.getElementById('r-tipo').value,
+    participantes: participantes,
+    agenda: document.getElementById('r-agenda').value.trim()
+  });
+
+  cerrarModal('modal-reunion');
+  document.getElementById('r-desc').value = '';
+  document.getElementById('r-agenda').value = '';
+  document.getElementById('r-lugar').value = '';
+  document.querySelectorAll('#r-participantes-check input').forEach(function(inp){ inp.checked = false; });
+  renderReuniones(); renderDashboard();
+  showToast('Reunión agendada correctamente');
+}
+
+function eliminarReunion(id) {
+  if(!confirm('¿Eliminar esta reunión?')) return;
+  reuniones = reuniones.filter(function(r){ return r.id !== id; });
+  renderReuniones(); renderDashboard();
+  showToast('Reunión eliminada');
+}
+
+// ═══════════════════════════════════════════════════════
+// HOJAS DE RUTA
+// ═══════════════════════════════════════════════════════
+function renderHojasRuta() {
+  var fTec = document.getElementById('f-tecnico-hr').value;
+  var fEst = document.getElementById('f-estado-hr').value.toUpperCase();
+  var fBus = document.getElementById('f-buscar-hr').value.toLowerCase();
+
+  var filt = hojasRuta.filter(function(h){
+    if(fTec && h.tecnico !== fTec) return false;
+    if(fEst && h.estado.toUpperCase().indexOf(fEst) === -1) return false;
+    if(fBus && h.hr.toLowerCase().indexOf(fBus) === -1 && h.desc.toLowerCase().indexOf(fBus) === -1) return false;
+    return true;
+  });
+
+  document.getElementById('hr-contador').textContent = filt.length + ' hojas de ruta';
+
+  var tbody = document.getElementById('tbody-hr');
+  tbody.innerHTML = '';
+  if(!filt.length){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
+    return;
+  }
+  filt.forEach(function(h, i){
+    var diasCls = h.dias > 10 ? 'rojo' : h.dias >= 5 ? 'amarillo' : 'verde';
+    tbody.innerHTML += '<tr>'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td style="font-size:11px;font-weight:700;white-space:nowrap;color:var(--azul)">'+h.hr+'</td>'+
+      '<td style="font-size:12px;max-width:220px">'+h.desc+'</td>'+
+      '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.remitente.split(' ').slice(0,2).join(' ')+'</td>'+
+      '<td style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.tecnico.split(' ').slice(0,2).join(' ')+'</td>'+
+      '<td style="font-size:11px;white-space:nowrap">'+fmtFecha(h.fecha)+'</td>'+
+      '<td><span class="hr-dias '+diasCls+'">'+h.dias+'d</span></td>'+
+      '<td>'+
+        '<select style="font-size:11px;border:1px solid var(--borde);border-radius:6px;padding:3px 6px" onchange="cambiarEstadoHR('+h.id+',this.value)">'+
+          '<option '+(h.estado==='⏳ PENDIENTE'?'selected':'')+'>⏳ PENDIENTE</option>'+
+          '<option '+(h.estado==='✅ ATENDIDA'?'selected':'')+'>✅ ATENDIDA</option>'+
+          '<option '+(h.estado==='📤 DERIVADA'?'selected':'')+'>📤 DERIVADA</option>'+
+        '</select>'+
+      '</td>'+
+      '<td><input style="font-size:11px;border:1px solid var(--borde);border-radius:6px;padding:3px 6px;width:120px" value="'+(h.obs||'')+'" placeholder="Observaciones" onblur="editarObsHR('+h.id+',this.value)"></td>'+
+    '</tr>';
+  });
+}
+
+function cambiarEstadoHR(id, val) {
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(h) { h.estado = val; renderDashboard(); showToast('Hoja de Ruta actualizada'); }
+}
+function editarObsHR(id, val) {
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(h) h.obs = val;
+}
+
+// Upload PDF / Excel
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  var files = e.dataTransfer.files;
+  if(files.length) procesarArchivo({ files: files });
+}
+function procesarArchivo(input) {
+  var file = input.files[0];
+  if(!file) return;
+  var status = document.getElementById('pdf-status');
+  status.style.display = 'block';
+  status.innerHTML = '<div style="background:#FFF3CD;border:1px solid #FFD700;border-radius:8px;padding:12px 16px;color:#7A5000"><b>⏳ Procesando archivo:</b> '+file.name+'...<br><small style="color:#888">El sistema extraerá las Hojas de Ruta automáticamente. Para PDFs, el texto debe ser extraíble (no escaneado). Si el PDF está escaneado, convierta a Excel primero.</small></div>';
+
+  // Simular procesamiento (en producción aquí iría la lógica de parseo)
+  setTimeout(function(){
+    var nuevasHR = [
+      { id: nextHrId++, hr:"E-"+Math.floor(Math.random()*10000)+"/2026", desc:"[IMPORTADO] NUEVA HOJA DE RUTA - "+file.name, remitente:"SISTEMA", tecnico:"VILMA BEATRIZ CHOQUE MARTINEZ", fecha:new Date().toISOString().split('T')[0], dias:0, estado:"⏳ PENDIENTE", correo:"lucichm1988@gmail.com", obs:"Importado desde PDF" }
+    ];
+    nuevasHR.forEach(function(h){ hojasRuta.push(h); });
+    status.innerHTML = '<div style="background:#E2EFDA;border:1px solid #276221;border-radius:8px;padding:12px 16px;color:#276221">'+
+      '<b>✅ Archivo procesado:</b> '+file.name+'<br>'+
+      '<small>Se detectó 1 nueva Hoja de Ruta. Revise la tabla y complete los datos del técnico responsable.</small><br><br>'+
+      '<b>💡 Nota:</b> Para integración automática completa con PDFs complejos o múltiples HdR, el archivo se puede copiar al Google Apps Script del sistema DGEA para procesamiento en servidor.'+
+    '</div>';
+    renderHojasRuta(); renderDashboard();
+    showToast('Archivo importado: '+nuevasHR.length+' HdR encontradas');
+    input.value = '';
+  }, 1800);
+}
+
+// ═══════════════════════════════════════════════════════
+// CCTPs
+// ═══════════════════════════════════════════════════════
+var DESTINOS_CCTP = ['','Jurídica','Departamental','Despacho','VEAE','Viceministro','Archivo'];
+var ESTADOS_CCTP  = ['Trámite en elaboración','Trámite revisado','Enviado Departamental','Trámite en despacho','Trámite con RM'];
+
+function renderResumenCCTP() {
+  var cont = document.getElementById('cctp-resumen-cards');
+  if(!cont) return;
+  var porEstado = {};
+  ESTADOS_CCTP.forEach(function(e){ porEstado[e]=0; });
+  cctps.forEach(function(c){ if(porEstado[c.estado]!==undefined) porEstado[c.estado]++; });
+  var colores = { 'Trámite en elaboración':'#FFF3CD,#7A5000','Trámite revisado':'#D6EAF8,#1F4E79','Enviado Departamental':'#E8DAEF,#5B2C6F','Trámite en despacho':'#FFE0B2,#7A3800','Trámite con RM':'#E2EFDA,#276221' };
+  cont.innerHTML = Object.keys(porEstado).map(function(e){
+    var cols = (colores[e]||'#F5F5F5,#555').split(',');
+    return '<div style="background:'+cols[0]+';border:1px solid '+cols[1]+'33;border-radius:10px;padding:12px 14px;text-align:center">'+
+      '<div style="font-size:26px;font-weight:900;color:'+cols[1]+'">'+porEstado[e]+'</div>'+
+      '<div style="font-size:10px;font-weight:700;color:'+cols[1]+';margin-top:3px;line-height:1.3">'+e+'</div>'+
+    '</div>';
+  }).join('')+
+  '<div style="background:#1F3864;border-radius:10px;padding:12px 14px;text-align:center">'+
+    '<div style="font-size:26px;font-weight:900;color:white">'+cctps.length+'</div>'+
+    '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);margin-top:3px">TOTAL CCTPs</div>'+
+  '</div>';
+}
+
+function renderCCTP() {
+  renderResumenCCTP();
+  var fEst  = document.getElementById('f-estado-cctp').value;
+  var fResp = document.getElementById('f-resp-cctp').value;
+  var fBus  = document.getElementById('f-buscar-cctp').value.toLowerCase();
+
+  var filt = cctps.filter(function(c){
+    if(fEst  && c.estado !== fEst) return false;
+    if(fResp && c.responsable !== fResp) return false;
+    if(fBus  && c.nombre.toLowerCase().indexOf(fBus)===-1 && (c.hr||'').toLowerCase().indexOf(fBus)===-1) return false;
+    return true;
+  });
+
+  var tbody = document.getElementById('tbody-cctp');
+  tbody.innerHTML = '';
+  filt.forEach(function(c, i){
+    var diasCls = c.dias > 15 ? 'sem-rojo' : c.dias > 8 ? 'sem-amarillo' : 'sem-verde';
+
+    // Responsable: solo técnicos del equipo
+    var selResp = '<select onchange="cambiarCampoCCTP('+c.id+',\'responsable\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:130px">'+
+      [''].concat(tecnicos.map(function(t){ return t.nombre.split(' ')[0]+' '+t.nombre.split(' ')[1]; }))
+      .map(function(n){ return '<option'+(c.responsable===n?' selected':'')+'>'+n+'</option>'; }).join('')+
+      // también conservar valores libres preexistentes
+    '</select>';
+
+    var selEst = '<select onchange="cambiarCampoCCTP('+c.id+',\'estado\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:190px">'+
+      ESTADOS_CCTP.map(function(e){ return '<option value="'+e+'"'+(c.estado===e?' selected':'')+'>'+e+'</option>'; }).join('')+'</select>';
+
+    var selDest = '<select onchange="cambiarCampoCCTP('+c.id+',\'destino\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px">'+
+      DESTINOS_CCTP.map(function(d){ return '<option value="'+d+'"'+((c.destino||'')=== d?' selected':'')+'>'+d+'</option>'; }).join('')+'</select>';
+
+    tbody.innerHTML += '<tr>'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td>'+selResp+'</td>'+
+      '<td style="font-size:11px;font-weight:700;color:var(--azul)">'+c.hr+'</td>'+
+      '<td style="font-size:12px;font-weight:700">'+c.nombre+'</td>'+
+      '<td>'+selEst+'</td>'+
+      '<td style="font-size:11px;white-space:nowrap"><input type="date" value="'+(c.fechaEnvio&&c.fechaEnvio!=='—'?c.fechaEnvio:'')+'" onchange="cambiarCampoCCTP('+c.id+',\'fechaEnvio\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
+      '<td class="'+(c.dias>0?diasCls:'')+'" style="font-weight:700;font-size:12px">'+(c.dias>0?c.dias+'d':'—')+'</td>'+
+      '<td>'+selDest+'</td>'+
+      '<td><input value="'+(c.obs||'')+'" placeholder="Observaciones..." onblur="cambiarCampoCCTP('+c.id+',\'obs\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 6px;font-size:11px;width:120px;font-family:var(--font)"></td>'+
+    '</tr>';
+  });
+  if(!filt.length) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
+}
+
+function cambiarCampoCCTP(id, campo, val) {
+  var c = cctps.find(function(x){ return x.id===id; });
+  if(!c) return;
+  c[campo] = val;
+  renderResumenCCTP();
+  renderDashboard();
+  showToast('✏️ CCTP actualizado');
+}
+
+function abrirModalCCTP() {
+  document.getElementById('nc-fecha').value = new Date().toISOString().split('T')[0];
+  abrirModal('modal-cctp');
+}
+
+function guardarCCTP() {
+  var nombre = document.getElementById('nc-nombre').value.trim().toUpperCase();
+  if(!nombre){ alert('Ingrese el nombre del CCTP'); return; }
+  cctps.push({
+    id: nextCctpId++,
+    responsable: document.getElementById('nc-responsable').value,
+    hr: document.getElementById('nc-hr').value.trim() || '—',
+    nombre: nombre,
+    estado: document.getElementById('nc-estado').value,
+    fechaEnvio: document.getElementById('nc-fecha').value,
+    dias: 0,
+    destino: document.getElementById('nc-destino').value,
+    obs: document.getElementById('nc-obs').value.trim()
+  });
+  cerrarModal('modal-cctp');
+  ['nc-nombre','nc-hr','nc-obs'].forEach(function(id){ document.getElementById(id).value=''; });
+  poblarSelects();
+  renderCCTP();
+  showToast('CCTP agregado');
+}
+
+// ═══════════════════════════════════════════════════════
+// VISTA TÉCNICOS
+// ═══════════════════════════════════════════════════════
+function renderTecnicoSelector() {
+  var cont = document.getElementById('tecnico-selector');
+  cont.innerHTML = '';
+  tecnicos.forEach(function(t){
+    var pill = document.createElement('div');
+    pill.className = 'tecnico-pill';
+    pill.textContent = t.nombre.split(' ')[0]+' '+t.nombre.split(' ')[1];
+    pill.onclick = function(){
+      document.querySelectorAll('.tecnico-pill').forEach(function(p){ p.classList.remove('active'); });
+      pill.classList.add('active');
+      renderVistaTecnico(t.nombre);
+    };
+    cont.appendChild(pill);
+  });
+  if(cont.firstChild) cont.firstChild.classList.add('active');
+}
+
+function renderVistaTecnico(nombreTecnico) {
+  var tec = tecnicos.find(function(t){ return t.nombre === nombreTecnico; });
+  if(!tec) return;
+  var cont = document.getElementById('vista-tecnico-content');
+
+  var misTareas = tareas.filter(function(t){ return t.tecnico === nombreTecnico; });
+  var misHR = hojasRuta.filter(function(h){ return h.tecnico === nombreTecnico; });
+  var misCCTP = cctps.filter(function(c){ return misHR.some(function(h){ return h.hr === c.hr; }); });
+
+  var tareasTotal = misTareas.length;
+  var tareasOk = misTareas.filter(function(t){ return t.estado === '✅ COMPLETADO'; }).length;
+  var hrTotal = misHR.length;
+  var hrOk = misHR.filter(function(h){ return h.estado === '✅ ATENDIDA'; }).length;
+  var cctpTotal = misCCTP.length;
+  var cctpOk = misCCTP.filter(function(c){ return c.estado === 'Trámite con RM'; }).length;
+
+  var pctTareas = tareasTotal ? Math.round(tareasOk/tareasTotal*100) : 0;
+  var pctHR = hrTotal ? Math.round(hrOk/hrTotal*100) : 0;
+  var pctCCTP = cctpTotal ? Math.round(cctpOk/cctpTotal*100) : 0;
+  var totalItems = tareasTotal + hrTotal + cctpTotal;
+  var totalOk = tareasOk + hrOk + cctpOk;
+  var pctGeneral = totalItems ? Math.round(totalOk/totalItems*100) : 0;
+
+  // ── HEADER TÉCNICO
+  var html = '<div class="tecnico-header-card">'+
+    '<div class="avatar">'+primerasLetras(tec.nombre)+'</div>'+
+    '<div style="flex:1">'+
+      '<div class="tec-nombre">'+tec.nombre+'</div>'+
+      '<div class="tec-cargo">'+tec.esp+'</div>'+
+      '<div style="font-size:11px;opacity:0.7;margin-top:4px">📧 '+tec.correo+' · 📱 '+tec.tel+'</div>'+
+    '</div>'+
+    '<div class="tec-stats">'+
+      '<div class="tec-stat"><div class="tec-stat-num">'+pctGeneral+'%</div><div class="tec-stat-lab">Avance total</div></div>'+
+      '<div class="tec-stat"><div class="tec-stat-num">'+tareasOk+'/'+tareasTotal+'</div><div class="tec-stat-lab">Tareas</div></div>'+
+      '<div class="tec-stat"><div class="tec-stat-num">'+hrOk+'/'+hrTotal+'</div><div class="tec-stat-lab">HdR</div></div>'+
+      '<div class="tec-stat"><div class="tec-stat-num">'+cctpOk+'/'+cctpTotal+'</div><div class="tec-stat-lab">CCTPs</div></div>'+
+    '</div>'+
+  '</div>';
+
+  // ── BARRA DE PROGRESO GENERAL
+  var pctColor = pctGeneral >= 80 ? '#276221' : pctGeneral >= 50 ? '#E87722' : '#C00000';
+  html += '<div style="background:white;border:1px solid var(--borde);border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<span style="font-size:13px;font-weight:700;color:var(--azul)">Progreso general de actividades</span>'+
+      '<span style="font-size:18px;font-weight:900;color:'+pctColor+'">'+pctGeneral+'% completado</span>'+
+    '</div>'+
+    '<div style="height:14px;background:#E0E6ED;border-radius:7px;overflow:hidden">'+
+      '<div style="height:100%;width:'+pctGeneral+'%;background:'+pctColor+';border-radius:7px;transition:width 0.4s"></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:20px;margin-top:10px;font-size:12px;color:var(--texto-muted)">'+
+      '<span style="color:'+pctColor+';font-weight:700">✅ '+totalOk+' completadas</span>'+
+      '<span>⏳ '+(totalItems-totalOk)+' pendientes</span>'+
+      '<span>📊 '+totalItems+' actividades totales</span>'+
+    '</div>'+
+  '</div>';
+
+  // ══════════════════════════════════════════════
+  // SECCIÓN 1: TAREAS
+  // ══════════════════════════════════════════════
+  html += '<div style="background:white;border:1px solid var(--borde);border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<div style="background:var(--azul);padding:12px 18px;display:flex;align-items:center;justify-content:space-between">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:18px">📋</span>'+
+        '<span style="color:white;font-size:14px;font-weight:800">TAREAS ASIGNADAS</span>'+
+        '<span style="background:rgba(255,255,255,0.2);color:white;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+tareasOk+' / '+tareasTotal+'</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="width:80px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pctTareas+'%;background:#76FF03;border-radius:4px"></div></div>'+
+        '<span style="color:white;font-size:13px;font-weight:800">'+pctTareas+'%</span>'+
+        '<button onclick="marcarTodas(\''+nombreTecnico+'\')" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">✅ Marcar todas</button>'+
+      '</div>'+
+    '</div>';
+
+  if(!misTareas.length){
+    html += '<div style="padding:24px;text-align:center;color:var(--texto-muted)">Sin tareas asignadas</div>';
+  } else {
+    misTareas.forEach(function(t){
+      var completado = t.estado === '✅ COMPLETADO';
+      var enProceso = t.estado === '🔄 EN PROCESO';
+      var pausado = t.estado === '⏸ PAUSADO';
+      var cancelado = t.estado === '❌ CANCELADO';
+      var dias = diasRestantes(t.entrega);
+      var diasTxt = '', diasColor = '';
+      if(dias !== null){
+        if(dias < 0){ diasTxt = Math.abs(dias)+'d VENCIDA'; diasColor = '#C00000'; }
+        else if(dias === 0){ diasTxt = 'VENCE HOY'; diasColor = '#C00000'; }
+        else if(dias === 1){ diasTxt = 'Vence mañana'; diasColor = '#E87722'; }
+        else { diasTxt = 'Vence en '+dias+'d'; diasColor = '#555'; }
+      }
+      var prioColor = !t.prioridad ? '#888' : t.prioridad.indexOf('ALTA')>-1 ? '#C00000' : t.prioridad.indexOf('MEDIA')>-1 ? '#E87722' : '#276221';
+      var iconoEstado = completado ? '✅' : enProceso ? '🔄' : pausado ? '⏸' : cancelado ? '❌' : '⏳';
+      var bgFila = completado ? '#F6FBF4' : enProceso ? '#F0F6FF' : pausado ? '#FFFACD' : cancelado ? '#F5F5F5' : 'white';
+      var avPct = Math.round((t.avance||0)*100);
+      var estadosT = ['⏳ PENDIENTE','🔄 EN PROCESO','✅ COMPLETADO','⏸ PAUSADO','❌ CANCELADO'];
+      var selectOpts = estadosT.map(function(s){ return '<option value="'+s+'"'+(t.estado===s?' selected':'')+'>'+s+'</option>'; }).join('');
+      var avancesOpts = ['0%','10%','20%','30%','40%','50%','60%','70%','80%','90%','100%'].map(function(a){ return '<option value="'+a+'"'+(avPct+'%'===a?' selected':'')+'>'+a+'</option>'; }).join('');
+      html += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid #F0F0F0;background:'+bgFila+';transition:background 0.15s">'+
+        '<div style="font-size:22px;margin-top:2px;flex-shrink:0">'+iconoEstado+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:700;color:'+(completado||cancelado?'#888':'var(--texto)')+';text-decoration:'+(completado||cancelado?'line-through':'none')+';line-height:1.4;margin-bottom:6px">'+t.desc+'</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">'+
+            (t.tipo?'<span style="font-size:11px;background:#EEF0FF;color:#334;border-radius:4px;padding:2px 7px">'+t.tipo+'</span>':'')+
+            (t.prioridad?'<span style="font-size:11px;font-weight:700;color:'+prioColor+'">'+t.prioridad+'</span>':'')+
+            (t.entrega?'<span style="font-size:11px;color:'+diasColor+';font-weight:600">📅 '+fmtFecha(t.entrega)+(diasTxt?' · '+diasTxt:'')+'</span>':'')+
+          '</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Estado</div>'+
+              '<select onchange="cambiarEstadoTecTarea('+t.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;background:white;cursor:pointer;min-width:170px">'+selectOpts+'</select>'+
+            '</div>'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Avance</div>'+
+              '<select onchange="cambiarAvanceTecTarea('+t.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;background:white;cursor:pointer;min-width:80px">'+avancesOpts+'</select>'+
+            '</div>'+
+            '<div style="min-width:90px">'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:5px">Progreso</div>'+
+              '<div style="height:8px;background:#E0E6ED;border-radius:4px;overflow:hidden"><div style="height:100%;width:'+avPct+'%;background:'+(completado?'#276221':enProceso?'#2E75B6':'#CCC')+';border-radius:4px"></div></div>'+
+              '<span style="font-size:10px;color:var(--texto-muted);font-weight:700">'+avPct+'%</span>'+
+            '</div>'+
+            '<button class="btn-mini" onclick="abrirCronograma('+t.id+')">📅 Cronograma ('+(t.subtareas?t.subtareas.filter(function(s){return s.hecho;}).length:0)+'/'+(t.subtareas?t.subtareas.length:0)+')</button>'+
+            '<button class="btn-mini" onclick="notificarTarea('+t.id+')">🔔 Notificar avance</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+  }
+  html += '</div>';
+
+  // ══════════════════════════════════════════════
+  // SECCIÓN 2: HOJAS DE RUTA
+  // ══════════════════════════════════════════════
+  html += '<div style="background:white;border:1px solid var(--borde);border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<div style="background:#375623;padding:12px 18px;display:flex;align-items:center;justify-content:space-between">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:18px">📄</span>'+
+        '<span style="color:white;font-size:14px;font-weight:800">HOJAS DE RUTA</span>'+
+        '<span style="background:rgba(255,255,255,0.2);color:white;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+hrOk+' / '+hrTotal+'</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="width:80px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pctHR+'%;background:#76FF03;border-radius:4px"></div></div>'+
+        '<span style="color:white;font-size:13px;font-weight:800">'+pctHR+'%</span>'+
+        '<button onclick="marcarTodasHR(\''+nombreTecnico+'\')" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">✅ Marcar todas</button>'+
+      '</div>'+
+    '</div>';
+
+  if(!misHR.length){
+    html += '<div style="padding:24px;text-align:center;color:var(--texto-muted)">Sin hojas de ruta asignadas</div>';
+  } else {
+    misHR.forEach(function(h){
+      var atendida = h.estado === '✅ ATENDIDA';
+      var derivada = h.estado === '📤 DERIVADA';
+      var diasCls = h.dias > 10 ? '#C00000' : h.dias >= 5 ? '#E87722' : '#276221';
+      var diasLabel = h.dias > 10 ? '🔴 '+h.dias+'d sin atención' : h.dias >= 5 ? '🟡 '+h.dias+'d' : '🟢 '+h.dias+'d';
+      var iconoHR = atendida ? '✅' : derivada ? '📤' : h.dias > 10 ? '🔴' : '⏳';
+      var bgHR = atendida ? '#F6FBF4' : derivada ? '#F5F0FF' : h.dias > 10 ? '#FFF5F5' : 'white';
+      var estadosHR = ['⏳ PENDIENTE','🔄 EN REVISIÓN','✅ ATENDIDA','📤 DERIVADA','❌ RECHAZADA'];
+      var selectOptsHR = estadosHR.map(function(s){ return '<option value="'+s+'"'+(h.estado===s?' selected':'')+'>'+s+'</option>'; }).join('');
+      html += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid #F0F0F0;background:'+bgHR+';transition:background 0.15s">'+
+        '<div style="font-size:22px;margin-top:2px;flex-shrink:0">'+iconoHR+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'+
+            '<span style="font-size:13px;font-weight:800;color:var(--azul);text-decoration:'+(atendida?'line-through':'none')+'">'+h.hr+'</span>'+
+            '<span style="font-size:11px;font-weight:700;color:'+diasCls+'">'+diasLabel+'</span>'+
+          '</div>'+
+          '<div style="font-size:13px;color:'+(atendida?'#888':'var(--texto)')+';text-decoration:'+(atendida?'line-through':'none')+';line-height:1.4;margin-bottom:6px">'+h.desc+'</div>'+
+          '<div style="font-size:11px;color:#888;margin-bottom:10px">📅 Derivado: '+fmtFecha(h.fecha)+' · Remitente: '+h.remitente.split(' ').slice(0,2).join(' ')+'</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Estado</div>'+
+              '<select onchange="cambiarEstadoTecHR('+h.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;background:white;cursor:pointer;min-width:170px">'+selectOptsHR+'</select>'+
+            '</div>'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Observación</div>'+
+              '<input value="'+(h.obs||'')+'" placeholder="Ej: Enviado al despacho..." onchange="cambiarObsTecHR('+h.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;background:white;min-width:200px;font-family:var(--font)">'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+  }
+  html += '</div>';
+
+  // ══════════════════════════════════════════════
+  // SECCIÓN 3: CCTPs ATENDIDOS
+  // ══════════════════════════════════════════════
+  html += '<div style="background:white;border:1px solid var(--borde);border-radius:12px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">'+
+    '<div style="background:#7030A0;padding:12px 18px;display:flex;align-items:center;justify-content:space-between">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:18px">🏫</span>'+
+        '<span style="color:white;font-size:14px;font-weight:800">CCTPs ATENDIDOS</span>'+
+        '<span style="background:rgba(255,255,255,0.2);color:white;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+cctpOk+' / '+cctpTotal+'</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="width:80px;height:8px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pctCCTP+'%;background:#76FF03;border-radius:4px"></div></div>'+
+        '<span style="color:white;font-size:13px;font-weight:800">'+pctCCTP+'%</span>'+
+        '<button onclick="marcarTodosCCTP(\''+nombreTecnico+'\')" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">✅ Marcar todos</button>'+
+      '</div>'+
+    '</div>';
+
+  if(!misCCTP.length){
+    html += '<div style="padding:24px;text-align:center;color:var(--texto-muted)">Sin CCTPs relacionados a este técnico</div>';
+  } else {
+    misCCTP.forEach(function(c){
+      var conRM = c.estado === 'Trámite con RM';
+      var enElaboracion = c.estado === 'Trámite en elaboración';
+      var diasColor = c.dias > 15 ? '#C00000' : c.dias > 8 ? '#E87722' : '#276221';
+      var iconoCCTP = conRM ? '✅' : enElaboracion ? '✏️' : c.estado.indexOf('despacho')>-1 ? '📬' : c.estado.indexOf('Departamental')>-1 ? '📤' : '🔄';
+      var bgCCTP = conRM ? '#F6FBF4' : enElaboracion ? '#FFFACD' : c.estado.indexOf('despacho')>-1 ? '#F0F6FF' : 'white';
+      var estadosCCTP = ['Trámite en elaboración','Trámite revisado','Enviado Departamental','Trámite en despacho','Trámite con RM'];
+      var selectOptsCCTP = estadosCCTP.map(function(s){ return '<option value="'+s+'"'+(c.estado===s?' selected':'')+'>'+s+'</option>'; }).join('');
+      html += '<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid #F0F0F0;background:'+bgCCTP+';transition:background 0.15s">'+
+        '<div style="font-size:22px;margin-top:2px;flex-shrink:0">'+iconoCCTP+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:800;color:'+(conRM?'#888':'var(--texto)')+';text-decoration:'+(conRM?'line-through':'none')+';line-height:1.4;margin-bottom:6px">'+c.nombre+'</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">'+
+            '<span style="font-size:11px;font-weight:700;color:var(--azul)">HdR: '+c.hr+'</span>'+
+            '<span style="font-size:11px;color:#555">Resp: '+c.responsable+'</span>'+
+            (c.dias>0?'<span style="font-size:11px;font-weight:700;color:'+diasColor+'">⏱ '+c.dias+'d sin movimiento</span>':'')+
+            (c.obs?'<span style="font-size:11px;color:#777;font-style:italic">'+c.obs+'</span>':'')+
+          '</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Estado del trámite</div>'+
+              '<select onchange="cambiarEstadoTecCCTP('+c.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;background:white;cursor:pointer;min-width:200px">'+selectOptsCCTP+'</select>'+
+            '</div>'+
+            '<div>'+
+              '<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Observación</div>'+
+              '<input value="'+(c.obs||'')+'" placeholder="Ej: Pendiente firma..." onchange="cambiarObsTecCCTP('+c.id+',this.value)" style="border:1.5px solid #D0D7E2;border-radius:8px;padding:6px 10px;font-size:12px;background:white;min-width:200px;font-family:var(--font)">'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    });
+  }
+  html += '</div>';
+
+  cont.innerHTML = html;
+}
+
+// ── Cambio de estado desde Vista Técnicos
+function cambiarEstadoTecTarea(id, nuevoEstado) {
+  var t = tareas.find(function(x){ return x.id===id; });
+  if(!t) return;
+  t.estado = nuevoEstado;
+  if(nuevoEstado === '✅ COMPLETADO'){ t.avance = 1; t.notif = '✅ OK'; if(config.autoNotif) notificarTarea(t.id); }
+  else if(nuevoEstado === '🔄 EN PROCESO') t.notif = '🔵 En plazo';
+  else if(nuevoEstado === '❌ CANCELADO') t.notif = '—';
+  renderDashboard(); renderTareas();
+  renderVistaTecnico(t.tecnico);
+  guardarLocal();
+  showToast('Estado actualizado: '+nuevoEstado);
+}
+function cambiarAvanceTecTarea(id, pct) {
+  var t = tareas.find(function(x){ return x.id===id; });
+  if(!t) return;
+  t.avance = parseInt(pct)/100;
+  if(t.avance === 1 && t.estado !== '✅ COMPLETADO'){ t.estado = '✅ COMPLETADO'; t.notif = '✅ OK'; }
+  renderDashboard(); renderTareas();
+  renderVistaTecnico(t.tecnico);
+  showToast('Avance actualizado: '+pct);
+}
+function cambiarEstadoTecHR(id, nuevoEstado) {
+  var h = hojasRuta.find(function(x){ return x.id===id; });
+  if(!h) return;
+  h.estado = nuevoEstado;
+  renderDashboard(); renderHojasRuta();
+  renderVistaTecnico(h.tecnico);
+  showToast('HdR actualizada: '+nuevoEstado);
+}
+function cambiarObsTecHR(id, val) {
+  var h = hojasRuta.find(function(x){ return x.id===id; });
+  if(h) h.obs = val;
+}
+function cambiarEstadoTecCCTP(id, nuevoEstado) {
+  var c = cctps.find(function(x){ return x.id===id; });
+  if(!c) return;
+  c.estado = nuevoEstado;
+  renderDashboard(); renderCCTP();
+  var activo = document.querySelector('.tecnico-pill.active');
+  if(activo){
+    var txt = activo.textContent.trim().split(' ')[0];
+    var tec = tecnicos.find(function(t){ return t.nombre.indexOf(txt)===0; });
+    if(tec) renderVistaTecnico(tec.nombre);
+  }
+  showToast('CCTP actualizado: '+nuevoEstado);
+}
+function cambiarObsTecCCTP(id, val) {
+  var c = cctps.find(function(x){ return x.id===id; });
+  if(c) c.obs = val;
+}
+
+// Clicks directos en filas (toda la fila es clickeable)
+function toggleTareaClick(id) {
+  var t = tareas.find(function(x){ return x.id===id; });
+  if(!t) return;
+  var completado = t.estado === '✅ COMPLETADO';
+  t.estado = completado ? '🔄 EN PROCESO' : '✅ COMPLETADO';
+  t.avance = completado ? 0.5 : 1;
+  t.notif = completado ? '🔵 En plazo' : '✅ OK';
+  renderDashboard(); renderTareas(); renderVistaTecnico(t.tecnico);
+  showToast(completado ? 'Tarea desmarcada' : '¡Tarea marcada como cumplida!');
+}
+function toggleHRClick(id) {
+  var h = hojasRuta.find(function(x){ return x.id===id; });
+  if(!h) return;
+  h.estado = h.estado === '✅ ATENDIDA' ? '⏳ PENDIENTE' : '✅ ATENDIDA';
+  renderDashboard(); renderHojasRuta(); renderVistaTecnico(h.tecnico);
+  showToast('HdR actualizada');
+}
+function toggleCCTPClick(id) {
+  var c = cctps.find(function(x){ return x.id===id; });
+  if(!c) return;
+  c.estado = c.estado === 'Trámite con RM' ? 'Trámite revisado' : 'Trámite con RM';
+  renderDashboard(); renderCCTP();
+  var activo = document.querySelector('.tecnico-pill.active');
+  if(activo){
+    var txt = activo.textContent.trim().split(' ')[0];
+    var tec = tecnicos.find(function(t){ return t.nombre.indexOf(txt)===0; });
+    if(tec) renderVistaTecnico(tec.nombre);
+  }
+  showToast('CCTP actualizado');
+}
+
+// Marcar TODAS las actividades de golpe
+function marcarTodas(nombreTecnico) {
+  tareas.filter(function(t){ return t.tecnico === nombreTecnico; }).forEach(function(t){
+    t.estado = '✅ COMPLETADO'; t.avance = 1; t.notif = '✅ OK';
+  });
+  renderDashboard(); renderTareas(); renderVistaTecnico(nombreTecnico);
+  showToast('¡Todas las tareas marcadas como cumplidas!');
+}
+function marcarTodasHR(nombreTecnico) {
+  hojasRuta.filter(function(h){ return h.tecnico === nombreTecnico; }).forEach(function(h){
+    h.estado = '✅ ATENDIDA';
+  });
+  renderDashboard(); renderHojasRuta(); renderVistaTecnico(nombreTecnico);
+  showToast('¡Todas las Hojas de Ruta marcadas como atendidas!');
+}
+function marcarTodosCCTP(nombreTecnico) {
+  var misHR = hojasRuta.filter(function(h){ return h.tecnico === nombreTecnico; });
+  cctps.filter(function(c){ return misHR.some(function(h){ return h.hr===c.hr; }); }).forEach(function(c){
+    c.estado = 'Trámite con RM';
+  });
+  renderDashboard(); renderCCTP(); renderVistaTecnico(nombreTecnico);
+  showToast('¡Todos los CCTPs marcados como con RM!');
+}
+
+function toggleTecnicoTarea(id, el) {
+  var t = tareas.find(function(x){ return x.id === id; });
+  if(!t) return;
+  var completado = t.estado === '✅ COMPLETADO';
+  t.estado = completado ? '🔄 EN PROCESO' : '✅ COMPLETADO';
+  t.avance = completado ? 0.5 : 1;
+  t.notif = completado ? '🔵 En plazo' : '✅ OK';
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+  renderDashboard(); renderTareas();
+  showToast(completado ? 'Tarea marcada como en proceso' : '¡Tarea completada!');
+}
+
+function toggleTecnicoHR(id, el) {
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(!h) return;
+  var atendida = h.estado === '✅ ATENDIDA';
+  h.estado = atendida ? '⏳ PENDIENTE' : '✅ ATENDIDA';
+  el.classList.toggle('checked');
+  el.textContent = el.classList.contains('checked') ? '✓' : '';
+  renderDashboard(); renderHojasRuta();
+  showToast(atendida ? 'HdR marcada como pendiente' : '¡Hoja de Ruta atendida!');
+}
+
+// ═══════════════════════════════════════════════════════
+// EQUIPO
+// ═══════════════════════════════════════════════════════
+function renderEquipo() {
+  var tbody = document.getElementById('tbody-equipo');
+  tbody.innerHTML = '';
+  tecnicos.forEach(function(t, i){
+    var numTareas = tareas.filter(function(x){ return x.tecnico === t.nombre; }).length;
+    tbody.innerHTML += '<tr>'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td style="font-weight:700;font-size:12px">'+t.nombre+'</td>'+
+      '<td style="font-size:12px"><a href="mailto:'+t.correo+'" style="color:var(--azul-claro)">'+t.correo+'</a></td>'+
+      '<td style="font-size:11px">'+t.tel+'</td>'+
+      '<td style="font-size:11px">'+(t.telegram||'—')+'</td>'+
+      '<td style="font-size:11px;max-width:180px">'+t.esp+'</td>'+
+      '<td style="text-align:center;font-weight:700">'+numTareas+'</td>'+
+      '<td class="row-actions">'+
+        '<button class="btn-icon btn-sm" onclick="verTecnico(\''+t.nombre+'\')">👁</button>'+
+        '<button class="btn-icon btn-sm" onclick="editarTelTecnico('+t.id+')" title="Editar teléfono">✏️</button>'+
+      '</td>'+
+    '</tr>';
+  });
+}
+
+function verTecnico(nombre) {
+  showTab('tecnicos-view');
+  setTimeout(function(){
+    var pills = document.querySelectorAll('.tecnico-pill');
+    pills.forEach(function(p){ p.classList.remove('active'); });
+    pills.forEach(function(p){
+      if(p.textContent.trim() === nombre.split(' ')[0]+' '+nombre.split(' ')[1]) p.classList.add('active');
+    });
+    renderVistaTecnico(nombre);
+  }, 100);
+}
+
+function editarTelTecnico(id) {
+  var t = tecnicos.find(function(x){ return x.id === id; });
+  if(!t) return;
+  var nuevo = prompt('Teléfono para '+t.nombre.split(' ')[0]+':', t.tel);
+  if(nuevo !== null) { t.tel = nuevo; renderEquipo(); showToast('Teléfono actualizado'); }
+}
+
+function guardarTecnico() {
+  var nombre = document.getElementById('nt-nombre').value.trim().toUpperCase();
+  var correo = document.getElementById('nt-correo').value.trim();
+  var tel = document.getElementById('nt-tel').value.trim();
+  var telegram = document.getElementById('nt-telegram').value.trim();
+  var esp = document.getElementById('nt-esp').value.trim() || 'Técnico DGEA';
+  if(!nombre) { alert('Ingrese el nombre del técnico'); return; }
+  if(tecnicos.some(function(t){ return t.nombre === nombre; })) { alert('Ya existe un técnico con ese nombre'); return; }
+
+  tecnicos.push({ id: nextTecnicoId++, nombre, correo, tel, telegram, esp });
+  cerrarModal('modal-tecnico');
+  ['nt-nombre','nt-correo','nt-tel','nt-telegram','nt-esp'].forEach(function(id){ document.getElementById(id).value = ''; });
+  poblarSelects();
+  renderEquipo(); renderTecnicoSelector();
+  showToast('Técnico agregado correctamente');
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL UTILS
+// ═══════════════════════════════════════════════════════
+function abrirModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(function(overlay){
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// CRONOGRAMA DE ACTIVIDADES (subactividades por tarea/proyecto)
+// ═══════════════════════════════════════════════════════
+var cronoTareaId = null;
+
+function abrirCronograma(tareaId) {
+  cronoTareaId = tareaId;
+  renderCronograma();
+  abrirModal('modal-cronograma');
+}
+
+function renderCronograma() {
+  var t = tareas.find(function(x){ return x.id === cronoTareaId; });
+  if(!t) return;
+  if(!t.subtareas) t.subtareas = [];
+
+  document.getElementById('crono-titulo').textContent = '📅 Cronograma: ' + t.desc.substring(0,60) + (t.desc.length>60?'…':'');
+  document.getElementById('crono-subtitulo').textContent = '👤 ' + t.tecnico + (t.entrega ? ' · 🎯 Entrega general: ' + fmtFecha(t.entrega) : '');
+
+  var total = t.subtareas.length;
+  var hechas = t.subtareas.filter(function(s){ return s.hecho; }).length;
+  var pct = total ? Math.round(hechas/total*100) : 0;
+  document.getElementById('crono-progreso-fill').style.width = pct + '%';
+
+  var cont = document.getElementById('crono-lista');
+  if(!total){
+    cont.innerHTML = '<div style="text-align:center;color:var(--texto-muted);padding:16px;font-size:12px">Sin actividades en el cronograma aún. Añade la primera abajo.</div>';
+    return;
+  }
+  cont.innerHTML = t.subtareas.map(function(s){
+    return '<div class="crono-item">'+
+      '<div class="crono-check '+(s.hecho?'hecho':'')+'" onclick="toggleSubActividad('+s.id+')">'+(s.hecho?'✓':'')+'</div>'+
+      '<div class="crono-txt '+(s.hecho?'hecho':'')+'">'+s.texto+'</div>'+
+      (s.fecha ? '<div class="crono-fecha">'+fmtFecha(s.fecha)+'</div>' : '')+
+      '<div class="crono-del" onclick="eliminarSubActividad('+s.id+')">🗑</div>'+
+    '</div>';
+  }).join('');
+}
+
+function agregarSubActividad() {
+  var t = tareas.find(function(x){ return x.id === cronoTareaId; });
+  if(!t) return;
+  var input = document.getElementById('crono-nueva-desc');
+  var fechaInput = document.getElementById('crono-nueva-fecha');
+  var texto = input.value.trim();
+  if(!texto){ showToast('Escribe la actividad primero', false); return; }
+  if(!t.subtareas) t.subtareas = [];
+  t.subtareas.push({ id: nextSubtareaId++, texto: texto, fecha: fechaInput.value || '', hecho: false });
+  input.value = ''; fechaInput.value = '';
+  renderCronograma();
+  renderTareas();
+  if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(t.tecnico);
+  guardarLocal();
+  showToast('✅ Actividad añadida al cronograma');
+}
+
+function toggleSubActividad(subId) {
+  var t = tareas.find(function(x){ return x.id === cronoTareaId; });
+  if(!t) return;
+  var s = t.subtareas.find(function(x){ return x.id === subId; });
+  if(!s) return;
+  s.hecho = !s.hecho;
+  renderCronograma();
+  renderTareas();
+  if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(t.tecnico);
+  guardarLocal();
+}
+
+function eliminarSubActividad(subId) {
+  var t = tareas.find(function(x){ return x.id === cronoTareaId; });
+  if(!t) return;
+  t.subtareas = t.subtareas.filter(function(x){ return x.id !== subId; });
+  renderCronograma();
+  renderTareas();
+  if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(t.tecnico);
+  guardarLocal();
+}
+
+// ═══════════════════════════════════════════════════════
+// CONFIGURACIÓN DE NOTIFICACIONES (Telegram + correo vía Apps Script)
+// ═══════════════════════════════════════════════════════
+var config = { scriptUrl: '', chatId: '', autoNotif: false, usuario: '', syncActivo: false };
+
+function cargarConfig() {
+  try {
+    var raw = localStorage.getItem('dgea_config_v1');
+    if(raw) config = Object.assign(config, JSON.parse(raw));
+  } catch(e) { console.warn('No se pudo cargar la configuración', e); }
+  document.getElementById('cfg-script-url').value = config.scriptUrl || '';
+  document.getElementById('cfg-chat-id').value = config.chatId || '';
+  document.getElementById('cfg-auto-notif').checked = !!config.autoNotif;
+  document.getElementById('cfg-sync-activo').checked = !!config.syncActivo;
+  var selUsuario = document.getElementById('cfg-usuario');
+  selUsuario.innerHTML = '<option value="">-- Seleccionar --</option>' +
+    tecnicos.map(function(t){ return '<option value="'+t.nombre+'"'+(config.usuario===t.nombre?' selected':'')+'>'+t.nombre+'</option>'; }).join('');
+  actualizarBadgeSync();
+}
+
+function guardarConfig() {
+  config.scriptUrl = document.getElementById('cfg-script-url').value.trim();
+  config.chatId = document.getElementById('cfg-chat-id').value.trim();
+  config.autoNotif = document.getElementById('cfg-auto-notif').checked;
+  config.usuario = document.getElementById('cfg-usuario').value;
+  config.syncActivo = document.getElementById('cfg-sync-activo').checked;
+  localStorage.setItem('dgea_config_v1', JSON.stringify(config));
+  cerrarModal('modal-ajustes');
+  showToast('⚙️ Ajustes guardados');
+  if(config.syncActivo) sincronizarAhora(false);
+}
+
+function enviarNotificacion(mensaje, correoDestino, asunto) {
+  if(!config.scriptUrl){
+    showToast('⚠️ Configura primero la URL de Apps Script en Ajustes ⚙️', false);
+    abrirModal('modal-ajustes');
+    return;
+  }
+  fetch(config.scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // evita preflight OPTIONS, Apps Script lo recibe como texto
+    body: JSON.stringify({
+      accion: 'notificar',
+      chatId: config.chatId,
+      mensaje: mensaje,
+      correo: correoDestino || '',
+      asunto: asunto || 'DGEA – Notificación de tarea'
+    })
+  }).then(function(){
+    showToast('🔔 Notificación enviada');
+  }).catch(function(err){
+    console.error(err);
+    showToast('❌ No se pudo enviar (revisa la URL de Apps Script)', false);
+  });
+}
+
+function notificarTarea(tareaId) {
+  var t = tareas.find(function(x){ return x.id === tareaId; });
+  if(!t) return;
+  var tec = tecnicos.find(function(x){ return x.nombre === t.tecnico; });
+  var pct = Math.round((t.avance||0)*100);
+  var totalSub = t.subtareas ? t.subtareas.length : 0;
+  var hechasSub = t.subtareas ? t.subtareas.filter(function(s){return s.hecho;}).length : 0;
+  var msg = '📋 *DGEA – Actualización de tarea*\n'+
+    '👤 '+t.tecnico+'\n'+
+    '📝 '+t.desc+'\n'+
+    '📊 Estado: '+t.estado+' ('+pct+'%)'+
+    (totalSub ? '\n📅 Cronograma: '+hechasSub+'/'+totalSub+' actividades' : '')+
+    (t.entrega ? '\n🎯 Entrega: '+fmtFecha(t.entrega) : '');
+  enviarNotificacion(msg, tec ? tec.correo : '', 'DGEA – '+t.desc.substring(0,60));
+}
+
+function notificarDesdeCronograma() {
+  if(cronoTareaId) notificarTarea(cronoTareaId);
+}
+
+// ═══════════════════════════════════════════════════════
+// SINCRONIZACIÓN COMPARTIDA (mismos datos para todo el equipo)
+// ═══════════════════════════════════════════════════════
+var ultimoRemotoAplicado = localStorage.getItem('dgea_ultimo_remoto') || null;
+var sincronizando = false;
+var pushPendiente = null;
+
+function obtenerEstadoCompleto() {
+  return {
+    tareas: tareas, reuniones: reuniones, hojasRuta: hojasRuta, cctps: cctps,
+    tecnicos: tecnicos, normas: normas, archivoHR: archivoHR,
+    nextTareaId: nextTareaId, nextReunionId: nextReunionId, nextHrId: nextHrId,
+    nextCctpId: nextCctpId, nextTecnicoId: nextTecnicoId, nextNormaId: nextNormaId,
+    nextArchivoId: nextArchivoId, nextSubtareaId: nextSubtareaId
+  };
+}
+
+function aplicarEstadoRemoto(d) {
+  if(d.tareas) tareas = d.tareas;
+  if(d.reuniones) reuniones = d.reuniones;
+  if(d.hojasRuta) hojasRuta = d.hojasRuta;
+  if(d.cctps) cctps = d.cctps;
+  if(d.tecnicos) tecnicos = d.tecnicos;
+  if(d.normas) normas = d.normas;
+  if(d.archivoHR) archivoHR = d.archivoHR;
+  if(d.nextTareaId) nextTareaId = d.nextTareaId;
+  if(d.nextReunionId) nextReunionId = d.nextReunionId;
+  if(d.nextHrId) nextHrId = d.nextHrId;
+  if(d.nextCctpId) nextCctpId = d.nextCctpId;
+  if(d.nextTecnicoId) nextTecnicoId = d.nextTecnicoId;
+  if(d.nextNormaId) nextNormaId = d.nextNormaId;
+  if(d.nextArchivoId) nextArchivoId = d.nextArchivoId;
+  if(d.nextSubtareaId) nextSubtareaId = d.nextSubtareaId;
+  tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+  guardarLocal();
+}
+
+function renderTodo() {
+  poblarSelects();
+  renderDashboard(); renderTareas(); renderReuniones(); renderHojasRuta();
+  renderNormas(); renderCCTP(); renderArchivo(); renderEquipo(); renderTecnicoSelector();
+}
+
+function actualizarBadgeSync(estado, texto) {
+  var b = document.getElementById('badge-sync');
+  if(!b) return;
+  if(!config.syncActivo){ b.textContent = '☁️ Sin compartir'; b.className = 'badge-header'; return; }
+  if(estado === 'ok'){ b.textContent = '☁️ ' + (texto || 'Sincronizado'); b.className = 'badge-header verde'; }
+  else if(estado === 'error'){ b.textContent = '☁️ Error de sync'; b.className = 'badge-header rojo'; }
+  else if(estado === 'cargando'){ b.textContent = '☁️ Sincronizando…'; b.className = 'badge-header'; }
+  else { b.textContent = '☁️ Compartido activo'; b.className = 'badge-header'; }
+}
+
+function sincronizarAhora(manual) {
+  if(!config.scriptUrl){
+    if(manual){ showToast('⚠️ Configura la URL de Apps Script en ⚙️ Ajustes primero', false); abrirModal('modal-ajustes'); }
+    return;
+  }
+  if(!config.syncActivo && !manual) return;
+  if(sincronizando) return;
+  sincronizando = true;
+  actualizarBadgeSync('cargando');
+  fetch(config.scriptUrl + '?accion=obtenerEstado')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.ok && data.estado && data.actualizado && data.actualizado !== ultimoRemotoAplicado){
+        aplicarEstadoRemoto(data.estado);
+        ultimoRemotoAplicado = data.actualizado;
+        localStorage.setItem('dgea_ultimo_remoto', ultimoRemotoAplicado);
+        renderTodo();
+        actualizarBadgeSync('ok', 'Actualizado');
+        if(manual) showToast('☁️ Datos actualizados del equipo');
+      } else if(!data.estado) {
+        // aún no hay nada guardado remoto: subimos lo que tenemos
+        return empujarEstado();
+      } else {
+        actualizarBadgeSync('ok', 'Al día');
+      }
+    })
+    .catch(function(err){
+      console.error(err);
+      actualizarBadgeSync('error');
+      if(manual) showToast('❌ No se pudo sincronizar (revisa la URL de Apps Script)', false);
+    })
+    .finally(function(){ sincronizando = false; });
+}
+
+function empujarEstado() {
+  if(!config.scriptUrl || !config.syncActivo) return Promise.resolve();
+  return fetch(config.scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ accion: 'guardarEstado', estado: obtenerEstadoCompleto(), usuario: config.usuario || '' })
+  }).then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.ok){
+        ultimoRemotoAplicado = data.actualizado;
+        localStorage.setItem('dgea_ultimo_remoto', ultimoRemotoAplicado);
+        actualizarBadgeSync('ok', 'Sincronizado');
+      }
+    })
+    .catch(function(err){ console.error(err); actualizarBadgeSync('error'); });
+}
+
+function programarPush() {
+  if(!config.syncActivo || !config.scriptUrl) return;
+  if(pushPendiente) clearTimeout(pushPendiente);
+  pushPendiente = setTimeout(function(){ empujarEstado(); }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCIA LOCAL (guarda en este dispositivo entre sesiones)
+// ═══════════════════════════════════════════════════════
+function guardarLocal() {
+  try {
+    var estado = obtenerEstadoCompleto();
+    localStorage.setItem('dgea_data_v4', JSON.stringify(estado));
+  } catch(e) { console.warn('No se pudo guardar localmente', e); }
+  programarPush();
+}
+
+function cargarLocal() {
+  try {
+    var raw = localStorage.getItem('dgea_data_v4');
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(d.tareas) tareas = d.tareas;
+    if(d.reuniones) reuniones = d.reuniones;
+    if(d.hojasRuta) hojasRuta = d.hojasRuta;
+    if(d.cctps) cctps = d.cctps;
+    if(d.tecnicos) tecnicos = d.tecnicos;
+    if(d.normas) normas = d.normas;
+    if(d.archivoHR) archivoHR = d.archivoHR;
+    if(d.nextTareaId) nextTareaId = d.nextTareaId;
+    if(d.nextReunionId) nextReunionId = d.nextReunionId;
+    if(d.nextHrId) nextHrId = d.nextHrId;
+    if(d.nextCctpId) nextCctpId = d.nextCctpId;
+    if(d.nextTecnicoId) nextTecnicoId = d.nextTecnicoId;
+    if(d.nextNormaId) nextNormaId = d.nextNormaId;
+    if(d.nextArchivoId) nextArchivoId = d.nextArchivoId;
+    if(d.nextSubtareaId) nextSubtareaId = d.nextSubtareaId;
+    tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+  } catch(e) { console.warn('No se pudo cargar lo guardado localmente', e); }
+}
+
+// Autoguardado periódico + al salir/cambiar de pestaña
+setInterval(guardarLocal, 4000);
+window.addEventListener('beforeunload', guardarLocal);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) guardarLocal(); });
+
+// Sincronización con el equipo: revisa cambios de otros cada 15s
+setInterval(function(){ sincronizarAhora(false); }, 15000);
+
+// ═══════════════════════════════════════════════════════
+// PWA: instalación e ícono en el celular
+// ═══════════════════════════════════════════════════════
+var eventoInstalacion = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  eventoInstalacion = e;
+  var btn = document.getElementById('btn-instalar-app');
+  if(btn) btn.classList.add('mostrar');
+});
+
+function instalarApp() {
+  if(!eventoInstalacion) return;
+  eventoInstalacion.prompt();
+  eventoInstalacion.userChoice.then(function(){
+    eventoInstalacion = null;
+    document.getElementById('btn-instalar-app').classList.remove('mostrar');
+  });
+}
+
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('SW no registrado (normal si abres el archivo local):', e); });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// NORMAS / GUÍAS
+// ═══════════════════════════════════════════════════════
+var normas = [
+  { id:1, tipo:'GUÍA', titulo:'Guía de Materiales Educativos DGEA', responsable:'WILMA MALDONADO QUISPE', version:'v1.0', fecha:'2026-04-04', entrega:'2026-06-30', avance:60, estado:'En revisión', obs:'Enviada a Ayuda en Acción para revisión final' },
+  { id:2, tipo:'MANUAL', titulo:'Manual de Procedimientos DGEA', responsable:'VILMA BEATRIZ CHOQUE MARTINEZ', version:'v2.0', fecha:'2026-02-21', entrega:'2026-07-31', avance:30, estado:'En elaboración', obs:'En desarrollo' },
+  { id:3, tipo:'INSTRUCTIVO', titulo:'Instructivo Actualización RUES CEAs', responsable:'VILMA BEATRIZ CHOQUE MARTINEZ', version:'v1.0', fecha:'2026-04-04', entrega:'2026-06-15', avance:20, estado:'En elaboración', obs:'Proyectar para CEAs y CEAs Educación Permanente' },
+  { id:4, tipo:'REGLAMENTO', titulo:'Reglamento Flexa VEAE', responsable:'MAX MOESES PAUCARA NINA', version:'v1.0', fecha:'2026-04-07', entrega:'2026-06-20', avance:80, estado:'En revisión', obs:'Presentación pendiente ante VEAE' },
+  { id:5, tipo:'REGLAMENTO', titulo:'Reglamento de Becas VEAE', responsable:'WILMA MALDONADO QUISPE', version:'v1.0', fecha:'2026-03-16', entrega:'2026-05-30', avance:100, estado:'Vigente', obs:'Socialización realizada' },
+  { id:6, tipo:'INSTRUCTIVO', titulo:'PREP – Revisión y Actualización', responsable:'WILMA MALDONADO QUISPE', version:'v2.0', fecha:'2026-04-04', entrega:'2026-06-10', avance:90, estado:'En revisión', obs:'90% avance' }
+];
+var nextNormaId = 7;
+
+function renderNormas() {
+  var fTipo = document.getElementById('f-tipo-norma').value;
+  var fEst  = document.getElementById('f-estado-norma').value;
+  var fBus  = document.getElementById('f-buscar-norma').value.toLowerCase();
+
+  var filt = normas.filter(function(n){
+    if(fTipo && n.tipo !== fTipo) return false;
+    if(fEst  && n.estado !== fEst) return false;
+    if(fBus  && n.titulo.toLowerCase().indexOf(fBus)===-1 && n.responsable.toLowerCase().indexOf(fBus)===-1) return false;
+    return true;
+  });
+
+  var tbody = document.getElementById('tbody-normas');
+  tbody.innerHTML = '';
+  if(!filt.length){
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
+    return;
+  }
+  var tipoColors = { NORMA:'#D6EAF8,#1F4E79', GUÍA:'#E2EFDA,#276221', MANUAL:'#FFF3CD,#7A5000', INSTRUCTIVO:'#F5EEF8,#5B2C6F', REGLAMENTO:'#FFE0E0,#8B0000', PROTOCOLO:'#E8F8F5,#1A5276', CIRCULAR:'#FDF2E9,#784212' };
+  var estadoColors = { 'En elaboración':'pendiente', 'En revisión':'proceso', 'Aprobado':'completado', 'Vigente':'completado', 'Desactualizado':'cancelado' };
+
+  filt.forEach(function(n, i){
+    var tc = (tipoColors[n.tipo]||'#F0F0F0,#555').split(',');
+    var selTipo = '<select onchange="cambiarCampoNorma('+n.id+',\'tipo\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600">'+
+      ['NORMA','GUÍA','MANUAL','INSTRUCTIVO','REGLAMENTO','PROTOCOLO','CIRCULAR'].map(function(x){ return '<option'+(n.tipo===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+    var selResp = '<select onchange="cambiarCampoNorma('+n.id+',\'responsable\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;max-width:130px">'+
+      tecnicos.map(function(t){ return '<option value="'+t.nombre+'"'+(n.responsable===t.nombre?' selected':'')+'>'+t.nombre.split(' ')[0]+' '+t.nombre.split(' ')[1]+'</option>'; }).join('')+'</select>';
+    var selEst = '<select onchange="cambiarCampoNorma('+n.id+',\'estado\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600">'+
+      ['En elaboración','En revisión','Aprobado','Vigente','Desactualizado'].map(function(x){ return '<option'+(n.estado===x?' selected':'')+'>'+x+'</option>'; }).join('')+'</select>';
+
+    var avPct = n.avance || 0;
+    var selAv = '<select onchange="cambiarCampoNorma('+n.id+',\'avance\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px">'+
+      [0,10,20,30,40,50,60,70,80,90,100].map(function(x){ return '<option value="'+x+'"'+(avPct===x?' selected':'')+'>'+x+'%</option>'; }).join('')+'</select>';
+
+    var dias = diasRestantes(n.entrega);
+    var diasTxt = '—', diasStyle = 'color:var(--texto-muted);font-weight:600';
+    if(dias !== null){
+      if(dias < 0){ diasTxt = Math.abs(dias)+'d venc.'; diasStyle = 'color:#C00000;font-weight:800'; }
+      else if(dias === 0){ diasTxt = 'HOY'; diasStyle = 'color:#C00000;font-weight:800'; }
+      else if(dias <= 3){ diasTxt = dias+'d'; diasStyle = 'color:#E87722;font-weight:800'; }
+      else { diasTxt = dias+'d'; diasStyle = 'color:#276221;font-weight:800'; }
+    }
+
+    var avFillCls = avPct>=100 ? 'completo' : avPct>0 ? '' : '';
+
+    tbody.innerHTML += '<tr>'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td>'+selTipo+'</td>'+
+      '<td style="font-size:12px;font-weight:700;max-width:220px">'+n.titulo+'</td>'+
+      '<td>'+selResp+'</td>'+
+      '<td><input value="'+(n.version||'')+'" onblur="cambiarCampoNorma('+n.id+',\'version\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 6px;font-size:11px;width:60px;font-family:var(--font)"></td>'+
+      '<td><input type="date" value="'+(n.fecha||'')+'" onchange="cambiarCampoNorma('+n.id+',\'fecha\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
+      '<td><input type="date" value="'+(n.entrega||'')+'" onchange="cambiarCampoNorma('+n.id+',\'entrega\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
+      '<td style="'+diasStyle+';text-align:center;white-space:nowrap">'+diasTxt+'</td>'+
+      '<td style="min-width:90px">'+selAv+'<div class="avance-bar" style="margin-top:3px"><div class="avance-fill '+avFillCls+'" style="width:'+avPct+'%"></div></div></td>'+
+      '<td>'+selEst+'</td>'+
+      '<td><input value="'+(n.obs||'')+'" placeholder="Observaciones..." onblur="cambiarCampoNorma('+n.id+',\'obs\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 6px;font-size:11px;width:160px;font-family:var(--font)"></td>'+
+      '<td><button class="btn-icon" onclick="eliminarNorma('+n.id+')" style="color:var(--rojo)">🗑</button></td>'+
+    '</tr>';
+  });
+}
+
+function cambiarCampoNorma(id, campo, val) {
+  var n = normas.find(function(x){ return x.id===id; });
+  if(n) n[campo] = val;
+  showToast('✏️ Actualizado');
+}
+function eliminarNorma(id) {
+  if(!confirm('¿Eliminar este documento?')) return;
+  normas = normas.filter(function(n){ return n.id!==id; });
+  renderNormas(); showToast('Eliminado');
+}
+function guardarNorma() {
+  var titulo = document.getElementById('nn-titulo').value.trim();
+  var tipo   = document.getElementById('nn-tipo').value;
+  if(!titulo||!tipo){ alert('Complete título y tipo'); return; }
+  normas.push({
+    id: nextNormaId++,
+    tipo: tipo,
+    titulo: titulo,
+    responsable: document.getElementById('nn-responsable').value,
+    version: document.getElementById('nn-version').value.trim()||'v1.0',
+    fecha: document.getElementById('nn-fecha').value,
+    entrega: document.getElementById('nn-entrega').value,
+    avance: parseInt(document.getElementById('nn-avance').value)||0,
+    estado: document.getElementById('nn-estado').value,
+    obs: document.getElementById('nn-obs').value.trim()
+  });
+  cerrarModal('modal-norma');
+  ['nn-titulo','nn-version','nn-obs','nn-entrega'].forEach(function(id){ document.getElementById(id).value=''; });
+  renderNormas(); showToast('Norma/Guía guardada');
+}
+
+// ═══════════════════════════════════════════════════════
+// ARCHIVO DE HOJAS DE RUTA
+// ═══════════════════════════════════════════════════════
+var archivoHR = [
+  { id:1, hr:'E-24111/2026', desc:'SOLICITUD INSCRIPCIÓN NUEVA MODALIDAD CCTP CIUDAD ALTA', tecnico:'NATHALIA MEZA LORA', motivo:'Atendida y concluida', fechaArchivo:'2026-05-15', fechaHR:'2026-05-01', dias:14, obs:'Informe emitido y enviado al solicitante. Caso cerrado.' },
+  { id:2, hr:'E-22890/2026', desc:'CONSULTA REGLAMENTO EDUCACIÓN PERMANENTE', tecnico:'MAX MOESES PAUCARA NINA', motivo:'Atendida y concluida', fechaArchivo:'2026-05-10', fechaHR:'2026-04-28', dias:12, obs:'Respuesta vía nota de servicio.' },
+  { id:3, hr:'I-21503/2026', desc:'SOLICITUD DATOS SIE GESTIÓN 2025 – MUNICIPIO VIACHA', tecnico:'VILMA BEATRIZ CHOQUE MARTINEZ', motivo:'Derivada a otro despacho', fechaArchivo:'2026-05-08', fechaHR:'2026-04-25', dias:13, obs:'Derivado a Dirección de Estadística del Ministerio.' }
+];
+var nextArchivoId = 4;
+
+function poblarSelectHRArchivo() {
+  var sel = document.getElementById('arch-hr-sel');
+  if(!sel) return;
+  var pendientes = hojasRuta.filter(function(h){ return h.estado !== '✅ ATENDIDA'; });
+  sel.innerHTML = '<option value="">-- Seleccionar HdR pendiente --</option>';
+  pendientes.forEach(function(h){
+    sel.appendChild(new Option(h.hr + ' – ' + h.desc.substring(0,40), h.id));
+  });
+}
+
+function autocompletarHR(val) {
+  if(!val) return;
+  var h = hojasRuta.find(function(x){ return x.id === parseInt(val); });
+  if(!h) return;
+  document.getElementById('arch-desc').value = h.desc;
+  document.getElementById('arch-fecha-hr').value = h.fecha;
+  document.getElementById('arch-hr-manual').value = h.hr;
+  if(h.tecnico) document.getElementById('arch-tecnico').value = h.tecnico;
+}
+
+function renderArchivo() {
+  // Métricas
+  var cont = document.getElementById('archivo-metricas');
+  if(cont){
+    var porMotivo = {};
+    archivoHR.forEach(function(a){ porMotivo[a.motivo] = (porMotivo[a.motivo]||0)+1; });
+    var colMotivos = { 'Atendida y concluida':'#E2EFDA,#276221','Derivada a otro despacho':'#D6EAF8,#1F4E79','Sin competencia DGEA':'#FFF3CD,#7A5000','Duplicada':'#F5EEF8,#5B2C6F','Solicitud retirada':'#FFE0E0,#8B0000','Resolución emitida':'#E8F8F5,#1A5276','Otro':'#F0F0F0,#555' };
+    var html = '<div style="background:var(--azul);border-radius:10px;padding:12px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:white">'+archivoHR.length+'</div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);margin-top:3px">TOTAL ARCHIVADAS</div></div>';
+    Object.keys(porMotivo).forEach(function(m){
+      var cols = (colMotivos[m]||'#F0F0F0,#555').split(',');
+      html += '<div style="background:'+cols[0]+';border:1px solid '+cols[1]+'33;border-radius:10px;padding:12px 14px;text-align:center"><div style="font-size:26px;font-weight:900;color:'+cols[1]+'">'+porMotivo[m]+'</div><div style="font-size:10px;font-weight:700;color:'+cols[1]+';margin-top:3px;line-height:1.3">'+m+'</div></div>';
+    });
+    cont.innerHTML = html;
+  }
+
+  var fMotivo = document.getElementById('f-motivo-archivo').value;
+  var fTec    = document.getElementById('f-tecnico-archivo').value;
+  var fMes    = document.getElementById('f-mes-archivo').value;
+  var fBus    = document.getElementById('f-buscar-archivo').value.toLowerCase();
+
+  var filt = archivoHR.filter(function(a){
+    if(fMotivo && a.motivo !== fMotivo) return false;
+    if(fTec    && a.tecnico !== fTec) return false;
+    if(fMes    && a.fechaArchivo.slice(0,7) !== fMes) return false;
+    if(fBus    && a.hr.toLowerCase().indexOf(fBus)===-1 && a.desc.toLowerCase().indexOf(fBus)===-1) return false;
+    return true;
+  });
+
+  var tbody = document.getElementById('tbody-archivo');
+  tbody.innerHTML = '';
+  if(!filt.length){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--texto-muted)"><div style="font-size:32px;margin-bottom:8px">🗂️</div><div>No hay hojas de ruta archivadas con esos filtros</div></td></tr>';
+    return;
+  }
+
+  var motivoColors = {
+    'Atendida y concluida':   '#E2EFDA,#276221',
+    'Derivada a otro despacho':'#D6EAF8,#1F4E79',
+    'Sin competencia DGEA':   '#FFF3CD,#7A5000',
+    'Duplicada':              '#F5EEF8,#5B2C6F',
+    'Solicitud retirada':     '#FFE0E0,#8B0000',
+    'Resolución emitida':     '#E8F8F5,#1A5276',
+    'Otro':                   '#F5F5F5,#555'
+  };
+
+  filt.forEach(function(a, i){
+    var cols = (motivoColors[a.motivo]||'#F5F5F5,#555').split(',');
+    var selMotivo = '<select onchange="cambiarCampoArchivo('+a.id+',\'motivo\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;background:'+cols[0]+';color:'+cols[1]+'">'+
+      ['Atendida y concluida','Derivada a otro despacho','Sin competencia DGEA','Duplicada','Solicitud retirada','Resolución emitida','Otro']
+      .map(function(m){ return '<option value="'+m+'"'+(a.motivo===m?' selected':'')+'>'+m+'</option>'; }).join('')+'</select>';
+
+    var selTec = '<select onchange="cambiarCampoArchivo('+a.id+',\'tecnico\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:130px">'+
+      tecnicos.map(function(t){ return '<option value="'+t.nombre+'"'+(a.tecnico===t.nombre?' selected':'')+'>'+t.nombre.split(' ')[0]+' '+t.nombre.split(' ')[1]+'</option>'; }).join('')+'</select>';
+
+    var diasStyle = a.dias > 15 ? 'color:#C00000;font-weight:800' : a.dias > 8 ? 'color:#E87722;font-weight:800' : 'color:#276221;font-weight:800';
+
+    tbody.innerHTML += '<tr>'+
+      '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td style="font-size:11px;font-weight:800;color:var(--azul);white-space:nowrap">'+a.hr+'</td>'+
+      '<td style="font-size:12px;max-width:200px">'+a.desc+'</td>'+
+      '<td>'+selTec+'</td>'+
+      '<td>'+selMotivo+'</td>'+
+      '<td><input type="date" value="'+(a.fechaArchivo||'')+'" onchange="cambiarCampoArchivo('+a.id+',\'fechaArchivo\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
+      '<td style="font-size:11px;color:var(--texto-muted);white-space:nowrap">'+fmtFecha(a.fechaHR)+'</td>'+
+      '<td style="'+diasStyle+';text-align:center">'+a.dias+'d</td>'+
+      '<td><input value="'+(a.obs||'')+'" placeholder="Observaciones..." onblur="cambiarCampoArchivo('+a.id+',\'obs\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 6px;font-size:11px;width:160px;font-family:var(--font)"></td>'+
+      '<td><button class="btn-icon" onclick="eliminarArchivo('+a.id+')" style="color:var(--rojo)" title="Eliminar del archivo">🗑</button></td>'+
+    '</tr>';
+  });
+}
+
+function cambiarCampoArchivo(id, campo, val) {
+  var a = archivoHR.find(function(x){ return x.id===id; });
+  if(a){ a[campo]=val; renderArchivo(); showToast('✏️ Actualizado'); }
+}
+function eliminarArchivo(id) {
+  if(!confirm('¿Quitar del archivo? Esta acción no restaura la HdR original.')) return;
+  archivoHR = archivoHR.filter(function(a){ return a.id!==id; });
+  renderArchivo(); showToast('Registro eliminado del archivo');
+}
+
+function guardarArchivo() {
+  var hrSel  = document.getElementById('arch-hr-sel').value;
+  var hrMan  = document.getElementById('arch-hr-manual').value.trim();
+  var hrNum  = hrMan || (hrSel ? hojasRuta.find(function(h){ return h.id===parseInt(hrSel); })?.hr : '');
+  var desc   = document.getElementById('arch-desc').value.trim();
+  var tec    = document.getElementById('arch-tecnico').value;
+  var motivo = document.getElementById('arch-motivo').value;
+  var fecha  = document.getElementById('arch-fecha').value;
+
+  if(!hrNum || !tec || !motivo || !fecha){ alert('Complete los campos obligatorios (*)'); return; }
+
+  var fechaHR = document.getElementById('arch-fecha-hr').value;
+  var dias = fechaHR && fecha ? Math.round((new Date(fecha)-new Date(fechaHR))/86400000) : 0;
+
+  archivoHR.push({
+    id: nextArchivoId++,
+    hr: hrNum,
+    desc: desc || '—',
+    tecnico: tec,
+    motivo: motivo,
+    fechaArchivo: fecha,
+    fechaHR: fechaHR,
+    dias: dias,
+    obs: document.getElementById('arch-obs').value.trim()
+  });
+
+  // Marcar la HdR como atendida si fue seleccionada del listado
+  if(hrSel){
+    var h = hojasRuta.find(function(x){ return x.id===parseInt(hrSel); });
+    if(h) h.estado = '✅ ATENDIDA';
+  }
+
+  cerrarModal('modal-archivo');
+  ['arch-hr-manual','arch-desc','arch-obs','arch-fecha-hr'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('arch-hr-sel').value='';
+  document.getElementById('arch-tecnico').value='';
+  document.getElementById('arch-motivo').value='';
+  renderArchivo(); renderHojasRuta(); renderDashboard();
+  showToast('✅ Hoja de Ruta archivada correctamente');
+}
+
+// ═══════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "DGEA – Sistema de Gestión Integrado",
+  "short_name": "DGEA App",
+  "description": "Gestión de tareas, hojas de ruta, CCTPs y cronogramas de la Dirección General de Educación Alternativa",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EEF2F8",
+  "theme_color": "#1F3864",
+  "lang": "es-BO",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
