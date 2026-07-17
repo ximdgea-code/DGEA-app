@@ -581,19 +581,24 @@
 <div class="modal-overlay" id="modal-tarea">
   <div class="modal">
     <div class="modal-header">
-      <h3>➕ Nueva Tarea</h3>
+      <h3 id="modal-tarea-titulo">➕ Nueva Tarea</h3>
       <button class="modal-close" onclick="cerrarModal('modal-tarea')">✕</button>
     </div>
+    <input type="hidden" id="t-edit-id" value="">
     <div class="form-grid">
       <div class="form-group" style="grid-column: 1/-1">
         <label>Descripción de la Tarea *</label>
         <textarea id="t-desc" placeholder="Describe detalladamente la tarea..."></textarea>
       </div>
       <div class="form-group">
-        <label>Técnico *</label>
+        <label>Técnico responsable *</label>
         <select id="t-tecnico">
           <option value="">-- Seleccionar --</option>
         </select>
+      </div>
+      <div class="form-group" style="grid-column: 1/-1">
+        <label>Técnicos adicionales (opcional, para tareas en equipo)</label>
+        <div id="t-tecnicos-adicionales" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--borde);border-radius:8px;max-height:110px;overflow-y:auto"></div>
       </div>
       <div class="form-group">
         <label>Tipo de Documento</label>
@@ -637,7 +642,7 @@
     </div>
     <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-tarea')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarTarea()">💾 Guardar Tarea</button>
+      <button class="btn btn-primary" id="btn-guardar-tarea" onclick="guardarTarea()">💾 Guardar Tarea</button>
     </div>
   </div>
 </div>
@@ -646,9 +651,10 @@
 <div class="modal-overlay" id="modal-reunion">
   <div class="modal">
     <div class="modal-header">
-      <h3>📅 Nueva Reunión</h3>
+      <h3 id="modal-reunion-titulo">📅 Nueva Reunión</h3>
       <button class="modal-close" onclick="cerrarModal('modal-reunion')">✕</button>
     </div>
+    <input type="hidden" id="r-edit-id" value="">
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1">
         <label>Asunto / Descripción *</label>
@@ -684,10 +690,13 @@
         <label>Agenda / Notas</label>
         <textarea id="r-agenda" placeholder="Puntos a tratar..."></textarea>
       </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label><input type="checkbox" id="r-notificar" style="width:auto;margin-right:6px" checked>Notificar a los participantes (Telegram/correo) al guardar</label>
+      </div>
     </div>
     <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-reunion')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarReunion()">💾 Guardar Reunión</button>
+      <button class="btn btn-primary" id="btn-guardar-reunion" onclick="guardarReunion()">💾 Guardar Reunión</button>
     </div>
   </div>
 </div>
@@ -696,9 +705,10 @@
 <div class="modal-overlay" id="modal-tecnico">
   <div class="modal">
     <div class="modal-header">
-      <h3>👤 Agregar Nuevo Técnico</h3>
+      <h3 id="modal-tecnico-titulo">👤 Agregar Nuevo Técnico</h3>
       <button class="modal-close" onclick="cerrarModal('modal-tecnico')">✕</button>
     </div>
+    <input type="hidden" id="nt-edit-id" value="">
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1">
         <label>Nombre Completo *</label>
@@ -723,7 +733,7 @@
     </div>
     <div style="display:flex; gap:10px; margin-top:16px; justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-tecnico')">Cancelar</button>
-      <button class="btn btn-success" onclick="guardarTecnico()">✅ Agregar Técnico</button>
+      <button class="btn btn-success" id="btn-guardar-tecnico" onclick="guardarTecnico()">✅ Agregar Técnico</button>
     </div>
   </div>
 </div>
@@ -822,13 +832,17 @@
         <label>Motivo de Archivo *</label>
         <select id="arch-motivo">
           <option value="">-- Seleccionar --</option>
-          <option>Atendida y concluida</option>
-          <option>Derivada a otro despacho</option>
-          <option>Sin competencia DGEA</option>
-          <option>Duplicada</option>
-          <option>Solicitud retirada</option>
-          <option>Resolución emitida</option>
-          <option>Otro</option>
+          <option>SE ATENDIÓ</option>
+          <option>SE TOMÓ CONOCIMIENTO</option>
+          <option>SE ASISTIÓ A LA INVITACIÓN</option>
+          <option>SE COORDINÓ CON LA TÉCNICA</option>
+          <option>SE COORDINÓ CON LA INSTITUCIÓN</option>
+          <option>DERIVADA A OTRO DESPACHO</option>
+          <option>SIN COMPETENCIA DGEA</option>
+          <option>DUPLICADA</option>
+          <option>SOLICITUD RETIRADA</option>
+          <option>RESOLUCIÓN EMITIDA</option>
+          <option>OTRO</option>
         </select>
       </div>
       <div class="form-group">
@@ -847,6 +861,43 @@
     <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-archivo')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarArchivo()">🗂️ Archivar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MARCAR HdR COMO ATENDIDA (técnico) -->
+<div class="modal-overlay" id="modal-marcar-atendida">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📤 Marcar Hoja de Ruta como atendida</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-marcar-atendida')">✕</button>
+    </div>
+    <div id="marcar-subtitulo" style="font-size:12px;color:var(--texto-muted);margin-bottom:12px"></div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Motivo *</label>
+        <select id="marcar-motivo">
+          <option value="">-- Seleccionar --</option>
+          <option>SE ATENDIÓ</option>
+          <option>SE TOMÓ CONOCIMIENTO</option>
+          <option>SE ASISTIÓ A LA INVITACIÓN</option>
+          <option>SE COORDINÓ CON LA TÉCNICA</option>
+          <option>SE COORDINÓ CON LA INSTITUCIÓN</option>
+          <option>DERIVADA A OTRO DESPACHO</option>
+          <option>SIN COMPETENCIA DGEA</option>
+          <option>RESOLUCIÓN EMITIDA</option>
+          <option>OTRO</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Detalle / Observaciones</label>
+        <textarea id="marcar-obs" placeholder="Explica brevemente qué se hizo..."></textarea>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--texto-muted);margin-top:6px">Esta solicitud quedará "pendiente de autorización" hasta que Ximena la apruebe. Recién ahí pasará al Archivo.</div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-marcar-atendida')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSolicitudArchivo()">📤 Enviar para autorización</button>
     </div>
   </div>
 </div>
@@ -920,6 +971,44 @@
     <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-cronograma')">Cerrar</button>
       <button class="btn btn-primary" onclick="notificarDesdeCronograma()">🔔 Notificar avance</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ASIGNAR TÉCNICOS ADICIONALES -->
+<div class="modal-overlay" id="modal-asignar">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>👥 Asignar técnicos a la tarea</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-asignar')">✕</button>
+    </div>
+    <div id="asignar-subtitulo" style="font-size:12px;color:var(--texto-muted);margin-bottom:10px"></div>
+    <div style="font-size:12px;color:var(--texto-muted);margin-bottom:8px">Marca quiénes más trabajan en esta tarea (además del responsable principal). Todos ellos podrán verla en su Vista Técnico y recibir sus notificaciones.</div>
+    <div id="asignar-check-list" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--borde);border-radius:8px;max-height:200px;overflow-y:auto"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-asignar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarAsignar()">💾 Guardar asignación</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOTIFICAR A TODO EL EQUIPO -->
+<div class="modal-overlay" id="modal-notif-todos">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📢 Notificar a todo el equipo</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-notif-todos')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Mensaje</label>
+        <textarea id="notif-todos-msg" placeholder="Escribe el aviso que verá todo el equipo (grupo de Telegram y correo de cada técnico)..."></textarea>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--texto-muted);margin-bottom:6px">Se enviará al grupo de Telegram y al correo de cada técnico registrado en Equipo.</div>
+    <div style="display:flex;gap:10px;margin-top:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-notif-todos')">Cancelar</button>
+      <button class="btn btn-primary" onclick="enviarNotificacionATodos()">📢 Enviar a todos</button>
     </div>
   </div>
 </div>
@@ -1064,7 +1153,8 @@
         </select>
         <input type="text" id="f-buscar-tarea" placeholder="🔍 Buscar..." style="min-width:160px" oninput="renderTareas()">
       </div>
-      <button class="btn btn-primary" onclick="abrirModal('modal-tarea')">➕ Nueva Tarea</button>
+      <button class="btn btn-primary" onclick="abrirNuevaTarea()">➕ Nueva Tarea</button>
+      <button class="btn btn-outline" onclick="abrirModal('modal-notif-todos')">📢 Notificar a todos</button>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -1102,7 +1192,7 @@
         </select>
         <input type="month" id="f-mes-reunion" onchange="renderReuniones()" style="padding:6px 10px; border:1px solid var(--borde); border-radius:8px;">
       </div>
-      <button class="btn btn-primary" onclick="abrirModal('modal-reunion')">➕ Nueva Reunión</button>
+      <button class="btn btn-primary" onclick="abrirNuevaReunion()">➕ Nueva Reunión</button>
     </div>
     <div id="lista-reuniones"></div>
   </div>
@@ -1150,6 +1240,7 @@
             <th>F. Derivación</th>
             <th>Días sin atención</th>
             <th>Estado</th>
+            <th>Archivo</th>
             <th>Observaciones</th>
           </tr></thead>
           <tbody id="tbody-hr"></tbody>
@@ -1288,7 +1379,7 @@
   <!-- ═══ EQUIPO ═══ -->
   <div class="tab-pane" id="pane-equipo">
     <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
-      <button class="btn btn-success" onclick="abrirModal('modal-tecnico')">👤 Agregar Técnico</button>
+      <button class="btn btn-success" onclick="abrirNuevoTecnico()">👤 Agregar Técnico</button>
     </div>
     <div class="card">
       <div class="table-wrap">
@@ -1404,7 +1495,7 @@ var cctps = [
 ];
 
 var nextTareaId = 21, nextReunionId = 4, nextHrId = 19, nextCctpId = 24, nextTecnicoId = 10;
-tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; if(!t.tecnicosAdicionales) t.tecnicosAdicionales = []; });
 var nextSubtareaId = 1;
 
 // ═══════════════════════════════════════════════════════
@@ -1472,6 +1563,18 @@ function poblarSelects() {
       cont.appendChild(lbl);
     });
   }
+
+  // Técnicos adicionales en modal de tarea
+  var contAd = document.getElementById('t-tecnicos-adicionales');
+  if(contAd){
+    contAd.innerHTML = '';
+    nombres.forEach(function(n){
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:#F5F7FA;padding:4px 8px;border-radius:6px;border:1px solid var(--borde)';
+      lbl.innerHTML = '<input type="checkbox" class="t-ad-check" value="'+n+'"> '+n.split(' ')[0];
+      contAd.appendChild(lbl);
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1492,6 +1595,11 @@ function showTab(id) {
 // ═══════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════
+function tareaAsignadaA(t, nombre) {
+  if(t.tecnico === nombre) return true;
+  return !!(t.tecnicosAdicionales && t.tecnicosAdicionales.indexOf(nombre) !== -1);
+}
+
 function fmtFecha(str) {
   if(!str || str === '—') return '—';
   var d = new Date(str);
@@ -1503,6 +1611,12 @@ function diasRestantes(entrega) {
   var hoy = new Date(); hoy.setHours(0,0,0,0);
   var fEnt = new Date(entrega); fEnt.setHours(0,0,0,0);
   return Math.round((fEnt - hoy) / 86400000);
+}
+function diasTranscurridos(fecha) {
+  if(!fecha) return 0;
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var f = new Date(fecha); f.setHours(0,0,0,0);
+  return Math.round((hoy - f) / 86400000);
 }
 function pillEstado(estado) {
   var clases = { '✅ COMPLETADO':'completado','🔄 EN PROCESO':'proceso','⏳ PENDIENTE':'pendiente','⏸ PAUSADO':'cancelado','❌ CANCELADO':'cancelado' };
@@ -1546,7 +1660,7 @@ function renderDashboard() {
   document.getElementById('m-en-proceso').textContent = proceso.length;
   document.getElementById('badge-urgentes').textContent = '⚠ '+vencidas.length+' vencidas';
 
-  var hdr_rojo = hojasRuta.filter(function(h){ return h.dias > 10; }).length;
+  var hdr_rojo = hojasRuta.filter(function(h){ return h.estado==='⏳ PENDIENTE' && diasTranscurridos(h.fecha) > 10; }).length;
   document.getElementById('m-hr-sin-atender').textContent = hdr_rojo;
   document.getElementById('m-hr-total').textContent = hojasRuta.length;
   document.getElementById('m-cctp-proceso').textContent = cctps.filter(function(c){ return c.estado.indexOf('elaboración')>-1 || c.estado.indexOf('Departamental')>-1 || c.estado.indexOf('despacho')>-1; }).length;
@@ -1608,7 +1722,7 @@ function renderTareas() {
   var fBus = document.getElementById('f-buscar-tarea').value.toLowerCase();
 
   var filt = tareas.filter(function(t){
-    if(fTec && t.tecnico !== fTec) return false;
+    if(fTec && !tareaAsignadaA(t, fTec)) return false;
     if(fEst && t.estado.toUpperCase().indexOf(fEst) === -1) return false;
     if(fPri && (!t.prioridad || t.prioridad.toUpperCase().indexOf(fPri) === -1)) return false;
     if(fBus && t.desc.toLowerCase().indexOf(fBus) === -1 && t.tecnico.toLowerCase().indexOf(fBus) === -1) return false;
@@ -1628,7 +1742,9 @@ function renderTareas() {
     var avPct = Math.round((t.avance||0)*100);
     var avCls = avPct >= 100 ? 'completo' : t.prioridad && t.prioridad.indexOf('ALTA')>-1 ? 'alta' : '';
 
-    var selTec = '<select onchange="cambiarCampoTarea('+t.id+',\'tecnico\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:130px">'+
+    var tecnicoExiste = tecnicos.some(function(tc){ return tc.nombre === t.tecnico; });
+    var selTec = '<select onchange="cambiarCampoTarea('+t.id+',\'tecnico\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px;font-weight:600;max-width:130px'+(tecnicoExiste?'':';color:var(--rojo)')+'">'+
+      (tecnicoExiste?'':'<option value="⚠️ SIN ASIGNAR" selected>⚠️ SIN ASIGNAR</option>')+
       tecnicos.map(function(tc){ return '<option value="'+tc.nombre+'"'+(t.tecnico===tc.nombre?' selected':'')+'>'+tc.nombre.split(' ')[0]+' '+tc.nombre.split(' ')[1]+'</option>'; }).join('')+'</select>';
 
     var selTipo = '<select onchange="cambiarCampoTarea('+t.id+',\'tipo\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px">'+
@@ -1646,7 +1762,7 @@ function renderTareas() {
     var row = '<tr class="'+(t.estado==='✅ COMPLETADO'?'completado':'')+'">'+
       '<td style="color:var(--texto-muted);font-size:11px">'+t.num+'</td>'+
       '<td>'+selTec+'</td>'+
-      '<td style="max-width:220px;font-size:12px;'+(t.estado==='✅ COMPLETADO'?'text-decoration:line-through;color:#888':'')+'">'+t.desc+'</td>'+
+      '<td style="max-width:220px;font-size:12px;'+(t.estado==='✅ COMPLETADO'?'text-decoration:line-through;color:#888':'')+'">'+t.desc+(t.tecnicosAdicionales&&t.tecnicosAdicionales.length?' <span style="background:#E8F0FE;color:var(--azul);border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700" title="'+t.tecnicosAdicionales.join(', ')+'">+'+t.tecnicosAdicionales.length+'</span>':'')+'</td>'+
       '<td>'+selTipo+'</td>'+
       '<td>'+selPrio+'</td>'+
       '<td style="white-space:nowrap;font-size:11px"><input type="date" value="'+(t.entrega||'')+'" onchange="cambiarCampoTarea('+t.id+',\'entrega\',this.value)" style="border:1px solid var(--borde);border-radius:6px;padding:3px 5px;font-size:11px"></td>'+
@@ -1655,7 +1771,9 @@ function renderTareas() {
       '<td style="min-width:110px">'+selAv+'<div class="avance-bar" style="margin-top:3px"><div class="avance-fill '+avCls+'" style="width:'+avPct+'%"></div></div></td>'+
       '<td>'+pillNotif(t.notif)+'</td>'+
       '<td class="row-actions">'+
+        '<button class="btn-icon" title="Editar tarea" onclick="editarTarea('+t.id+')">✏️</button>'+
         '<button class="btn-icon" title="Cronograma de actividades" onclick="abrirCronograma('+t.id+')">📅</button>'+
+        '<button class="btn-icon" title="Asignar técnicos adicionales" onclick="abrirAsignar('+t.id+')">👥</button>'+
         '<button class="btn-icon" title="Notificar por Telegram/correo" onclick="notificarTarea('+t.id+')">🔔</button>'+
         '<button class="btn-icon" title="Eliminar" onclick="eliminarTarea('+t.id+')" style="color:var(--rojo)">🗑</button>'+
       '</td>'+
@@ -1681,6 +1799,9 @@ function cambiarCampoTarea(id, campo, val) {
   var allRows = document.querySelectorAll('#tbody-tareas tr');
   // simplemente refrescamos
   renderTareas();
+  var afectados = [t.tecnico].concat(t.tecnicosAdicionales||[]);
+  afectados.forEach(function(n){ if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(n); });
+  guardarLocal();
   showToast('✏️ Actualizado');
 }
 
@@ -1697,9 +1818,42 @@ function cambiarEstado(id, nuevoEstado) {
 
 function eliminarTarea(id) {
   if(!confirm('¿Eliminar esta tarea?')) return;
-  tareas = tareas.filter(function(t){ return t.id !== id; });
+  var t = tareas.find(function(x){ return x.id === id; });
+  var afectados = t ? [t.tecnico].concat(t.tecnicosAdicionales||[]) : [];
+  tareas = tareas.filter(function(x){ return x.id !== id; });
   renderTareas(); renderDashboard();
+  afectados.forEach(function(n){ if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(n); });
+  guardarLocal();
   showToast('Tarea eliminada');
+}
+
+function abrirNuevaTarea() {
+  limpiarFormTarea();
+  document.getElementById('t-edit-id').value = '';
+  document.getElementById('modal-tarea-titulo').textContent = '➕ Nueva Tarea';
+  document.getElementById('btn-guardar-tarea').textContent = '💾 Guardar Tarea';
+  abrirModal('modal-tarea');
+}
+
+function editarTarea(id) {
+  var t = tareas.find(function(x){ return x.id === id; });
+  if(!t) return;
+  poblarSelects(); // regenera checkboxes de técnicos adicionales antes de marcarlos
+  document.getElementById('t-edit-id').value = id;
+  document.getElementById('t-desc').value = t.desc || '';
+  document.getElementById('t-tecnico').value = t.tecnico || '';
+  document.getElementById('t-tipo').value = t.tipo || '';
+  document.getElementById('t-ref').value = t.ref || '';
+  document.getElementById('t-prioridad').value = t.prioridad || '🟡 MEDIA';
+  document.getElementById('t-inicio').value = t.inicio || '';
+  document.getElementById('t-entrega').value = t.entrega || '';
+  document.getElementById('t-obs').value = t.obs || '';
+  document.querySelectorAll('.t-ad-check').forEach(function(cb){
+    cb.checked = (t.tecnicosAdicionales||[]).indexOf(cb.value) !== -1;
+  });
+  document.getElementById('modal-tarea-titulo').textContent = '✏️ Editar Tarea';
+  document.getElementById('btn-guardar-tarea').textContent = '💾 Guardar Cambios';
+  abrirModal('modal-tarea');
 }
 
 function guardarTarea() {
@@ -1711,27 +1865,56 @@ function guardarTarea() {
   var dias = diasRestantes(entrega);
   var notif = dias === null ? '' : dias < 0 ? '🔴 VENCIDA' : dias === 0 ? '🔴 HOY' : dias === 1 ? '🟠 MAÑANA' : dias <= 3 ? '🟡 PRONTO' : '🔵 En plazo';
 
-  tareas.push({
-    id: nextTareaId++,
-    num: tareas.length + 1,
-    tipo: document.getElementById('t-tipo').value,
-    ref: document.getElementById('t-ref').value.trim(),
-    tecnico: tec,
-    desc: desc,
-    prioridad: document.getElementById('t-prioridad').value,
-    inicio: document.getElementById('t-inicio').value,
-    entrega: entrega,
-    estado: '⏳ PENDIENTE',
-    avance: 0,
-    notif: notif,
-    obs: document.getElementById('t-obs').value.trim(),
-    subtareas: []
-  });
+  var tecnicosAdicionales = Array.prototype.slice.call(document.querySelectorAll('.t-ad-check:checked'))
+    .map(function(cb){ return cb.value; })
+    .filter(function(n){ return n !== tec; });
+
+  var editId = document.getElementById('t-edit-id').value;
+  var tecnicosAfectados;
+
+  if(editId){
+    var t = tareas.find(function(x){ return x.id === parseInt(editId); });
+    if(!t){ showToast('No se encontró la tarea a editar', false); return; }
+    tecnicosAfectados = [t.tecnico].concat(t.tecnicosAdicionales||[], [tec], tecnicosAdicionales);
+    t.tipo = document.getElementById('t-tipo').value;
+    t.ref = document.getElementById('t-ref').value.trim();
+    t.tecnico = tec;
+    t.tecnicosAdicionales = tecnicosAdicionales;
+    t.desc = desc;
+    t.prioridad = document.getElementById('t-prioridad').value;
+    t.inicio = document.getElementById('t-inicio').value;
+    t.entrega = entrega;
+    t.notif = (t.estado === '✅ COMPLETADO' || t.estado === '❌ CANCELADO') ? t.notif : notif;
+    t.obs = document.getElementById('t-obs').value.trim();
+    showToast('Tarea actualizada correctamente');
+  } else {
+    tareas.push({
+      id: nextTareaId++,
+      num: tareas.length + 1,
+      tipo: document.getElementById('t-tipo').value,
+      ref: document.getElementById('t-ref').value.trim(),
+      tecnico: tec,
+      tecnicosAdicionales: tecnicosAdicionales,
+      desc: desc,
+      prioridad: document.getElementById('t-prioridad').value,
+      inicio: document.getElementById('t-inicio').value,
+      entrega: entrega,
+      estado: '⏳ PENDIENTE',
+      avance: 0,
+      notif: notif,
+      obs: document.getElementById('t-obs').value.trim(),
+      subtareas: []
+    });
+    tecnicosAfectados = [tec].concat(tecnicosAdicionales);
+    showToast('Tarea creada correctamente');
+  }
 
   cerrarModal('modal-tarea');
   limpiarFormTarea();
+  document.getElementById('t-edit-id').value = '';
   renderTareas(); renderDashboard();
-  showToast('Tarea creada correctamente');
+  tecnicosAfectados.forEach(function(n){ if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(n); });
+  guardarLocal();
 }
 
 function limpiarFormTarea() {
@@ -1740,6 +1923,7 @@ function limpiarFormTarea() {
   document.getElementById('t-prioridad').value = '🟡 MEDIA';
   document.getElementById('t-inicio').value = new Date().toISOString().split('T')[0];
   document.getElementById('t-entrega').value = '';
+  document.querySelectorAll('.t-ad-check').forEach(function(cb){ cb.checked = false; });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1786,9 +1970,46 @@ function renderReuniones() {
         '</div>'+
         (r.agenda ? '<div style="margin-top:6px;font-size:11px;color:var(--texto-muted);background:#F5F7FA;padding:6px 10px;border-radius:6px;border:1px solid var(--borde)">📋 '+r.agenda.replace(/\n/g,' · ')+'</div>' : '')+
       '</div>'+
-      '<button class="btn-icon" onclick="eliminarReunion('+r.id+')" style="color:var(--rojo);margin-left:auto">🗑</button>'+
+      '<button class="btn-icon" onclick="editarReunion('+r.id+')" title="Editar / Reprogramar" style="margin-left:auto">✏️</button>'+
+      '<button class="btn-icon" onclick="notificarReunion('+r.id+')" title="Notificar a participantes">🔔</button>'+
+      '<button class="btn-icon" onclick="eliminarReunion('+r.id+')" style="color:var(--rojo)" title="Eliminar">🗑</button>'+
     '</div>';
   }).join('');
+}
+
+function abrirNuevaReunion() {
+  document.getElementById('r-edit-id').value = '';
+  document.getElementById('r-desc').value = '';
+  document.getElementById('r-fecha').value = '';
+  document.getElementById('r-hora').value = '09:00';
+  document.getElementById('r-lugar').value = '';
+  document.getElementById('r-tipo').value = 'INTERNA';
+  document.getElementById('r-agenda').value = '';
+  document.getElementById('r-notificar').checked = true;
+  document.querySelectorAll('#r-participantes-check input').forEach(function(inp){ inp.checked = false; });
+  document.getElementById('modal-reunion-titulo').textContent = '📅 Nueva Reunión';
+  document.getElementById('btn-guardar-reunion').textContent = '💾 Guardar Reunión';
+  abrirModal('modal-reunion');
+}
+
+function editarReunion(id) {
+  var r = reuniones.find(function(x){ return x.id === id; });
+  if(!r) return;
+  poblarSelects(); // regenera checkboxes de participantes
+  document.getElementById('r-edit-id').value = id;
+  document.getElementById('r-desc').value = r.desc || '';
+  document.getElementById('r-fecha').value = r.fecha || '';
+  document.getElementById('r-hora').value = r.hora || '09:00';
+  document.getElementById('r-lugar').value = r.lugar || '';
+  document.getElementById('r-tipo').value = r.tipo || 'INTERNA';
+  document.getElementById('r-agenda').value = r.agenda || '';
+  document.getElementById('r-notificar').checked = false; // al reprogramar, no se notifica salvo que Ximena lo marque
+  document.querySelectorAll('#r-participantes-check input').forEach(function(inp){
+    inp.checked = (r.participantes||[]).indexOf(inp.value) !== -1;
+  });
+  document.getElementById('modal-reunion-titulo').textContent = '✏️ Editar / Reprogramar Reunión';
+  document.getElementById('btn-guardar-reunion').textContent = '💾 Guardar Cambios';
+  abrirModal('modal-reunion');
 }
 
 function guardarReunion() {
@@ -1799,31 +2020,65 @@ function guardarReunion() {
   var participantes = [];
   document.querySelectorAll('#r-participantes-check input:checked').forEach(function(inp){ participantes.push(inp.value); });
 
-  reuniones.push({
-    id: nextReunionId++,
-    desc: desc,
-    fecha: fecha,
-    hora: document.getElementById('r-hora').value || '09:00',
-    lugar: document.getElementById('r-lugar').value.trim() || 'DGEA',
-    tipo: document.getElementById('r-tipo').value,
-    participantes: participantes,
-    agenda: document.getElementById('r-agenda').value.trim()
-  });
+  var editId = document.getElementById('r-edit-id').value;
+  var notificar = document.getElementById('r-notificar').checked;
+  var r;
+
+  if(editId){
+    r = reuniones.find(function(x){ return x.id === parseInt(editId); });
+    if(!r){ showToast('No se encontró la reunión', false); return; }
+    r.desc = desc;
+    r.fecha = fecha;
+    r.hora = document.getElementById('r-hora').value || '09:00';
+    r.lugar = document.getElementById('r-lugar').value.trim() || 'DGEA';
+    r.tipo = document.getElementById('r-tipo').value;
+    r.participantes = participantes;
+    r.agenda = document.getElementById('r-agenda').value.trim();
+    showToast('Reunión actualizada');
+  } else {
+    r = {
+      id: nextReunionId++,
+      desc: desc,
+      fecha: fecha,
+      hora: document.getElementById('r-hora').value || '09:00',
+      lugar: document.getElementById('r-lugar').value.trim() || 'DGEA',
+      tipo: document.getElementById('r-tipo').value,
+      participantes: participantes,
+      agenda: document.getElementById('r-agenda').value.trim()
+    };
+    reuniones.push(r);
+    showToast('Reunión agendada correctamente');
+  }
 
   cerrarModal('modal-reunion');
-  document.getElementById('r-desc').value = '';
-  document.getElementById('r-agenda').value = '';
-  document.getElementById('r-lugar').value = '';
-  document.querySelectorAll('#r-participantes-check input').forEach(function(inp){ inp.checked = false; });
+  document.getElementById('r-edit-id').value = '';
   renderReuniones(); renderDashboard();
-  showToast('Reunión agendada correctamente');
+  guardarLocal();
+  if(notificar) notificarReunion(r.id);
 }
 
 function eliminarReunion(id) {
   if(!confirm('¿Eliminar esta reunión?')) return;
   reuniones = reuniones.filter(function(r){ return r.id !== id; });
   renderReuniones(); renderDashboard();
+  guardarLocal();
   showToast('Reunión eliminada');
+}
+
+function notificarReunion(id) {
+  var r = reuniones.find(function(x){ return x.id === id; });
+  if(!r) return;
+  var correos = (r.participantes||[]).map(function(n){
+    var tec = tecnicos.find(function(x){ return x.nombre === n; });
+    return tec ? tec.correo : '';
+  }).filter(Boolean).join(',');
+  var msg = '📅 *DGEA – Reunión: '+r.tipo+'*\n'+
+    '📝 '+r.desc+'\n'+
+    '🗓️ '+fmtFecha(r.fecha)+' · 🕐 '+r.hora+'\n'+
+    '📍 '+(r.lugar||'DGEA')+'\n'+
+    '👥 '+((r.participantes&&r.participantes.length)?r.participantes.join(', '):'Por definir')+
+    (r.agenda ? '\n📋 Agenda: '+r.agenda : '');
+  enviarNotificacion(msg, correos, 'DGEA – Reunión: '+r.desc.substring(0,60));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1846,11 +2101,29 @@ function renderHojasRuta() {
   var tbody = document.getElementById('tbody-hr');
   tbody.innerHTML = '';
   if(!filt.length){
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin resultados</td></tr>';
     return;
   }
   filt.forEach(function(h, i){
-    var diasCls = h.dias > 10 ? 'rojo' : h.dias >= 5 ? 'amarillo' : 'verde';
+    var diasVivo = h.estado === '⏳ PENDIENTE' ? diasTranscurridos(h.fecha) : h.dias;
+    var diasCls = diasVivo > 10 ? 'rojo' : diasVivo >= 5 ? 'amarillo' : 'verde';
+
+    var celdaArchivo;
+    if(h.solicitudArchivo){
+      celdaArchivo = '<div style="display:flex;flex-direction:column;gap:4px;min-width:150px">'+
+        '<span style="font-size:10px;font-weight:700;color:#E87722">⏳ Pend. autorización</span>'+
+        '<span style="font-size:10px;color:var(--texto-muted)" title="'+h.solicitudArchivo.obs+'">'+h.solicitudArchivo.motivo+' · '+h.solicitudArchivo.tecnico.split(' ')[0]+'</span>'+
+        '<div style="display:flex;gap:5px">'+
+          '<button class="btn-mini" onclick="autorizarArchivo('+h.id+')">✅ Autorizar</button>'+
+          '<button class="btn-mini rojo" onclick="rechazarSolicitudArchivo('+h.id+')">✕</button>'+
+        '</div>'+
+      '</div>';
+    } else if(h.estado === '✅ ATENDIDA'){
+      celdaArchivo = '<span style="font-size:11px;color:var(--verde);font-weight:700" title="'+(h.motivoFinal||'')+'">✅ Archivada</span>';
+    } else {
+      celdaArchivo = '<button class="btn-mini" onclick="abrirMarcarAtendida('+h.id+')">📤 Marcar atendida</button>';
+    }
+
     tbody.innerHTML += '<tr>'+
       '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
       '<td style="font-size:11px;font-weight:700;white-space:nowrap;color:var(--azul)">'+h.hr+'</td>'+
@@ -1858,14 +2131,14 @@ function renderHojasRuta() {
       '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.remitente.split(' ').slice(0,2).join(' ')+'</td>'+
       '<td style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.tecnico.split(' ').slice(0,2).join(' ')+'</td>'+
       '<td style="font-size:11px;white-space:nowrap">'+fmtFecha(h.fecha)+'</td>'+
-      '<td><span class="hr-dias '+diasCls+'">'+h.dias+'d</span></td>'+
+      '<td><span class="hr-dias '+diasCls+'">'+diasVivo+'d</span></td>'+
       '<td>'+
         '<select style="font-size:11px;border:1px solid var(--borde);border-radius:6px;padding:3px 6px" onchange="cambiarEstadoHR('+h.id+',this.value)">'+
           '<option '+(h.estado==='⏳ PENDIENTE'?'selected':'')+'>⏳ PENDIENTE</option>'+
-          '<option '+(h.estado==='✅ ATENDIDA'?'selected':'')+'>✅ ATENDIDA</option>'+
           '<option '+(h.estado==='📤 DERIVADA'?'selected':'')+'>📤 DERIVADA</option>'+
         '</select>'+
       '</td>'+
+      '<td>'+celdaArchivo+'</td>'+
       '<td><input style="font-size:11px;border:1px solid var(--borde);border-radius:6px;padding:3px 6px;width:120px" value="'+(h.obs||'')+'" placeholder="Observaciones" onblur="editarObsHR('+h.id+',this.value)"></td>'+
     '</tr>';
   });
@@ -1873,11 +2146,83 @@ function renderHojasRuta() {
 
 function cambiarEstadoHR(id, val) {
   var h = hojasRuta.find(function(x){ return x.id === id; });
-  if(h) { h.estado = val; renderDashboard(); showToast('Hoja de Ruta actualizada'); }
+  if(h) { h.estado = val; renderHojasRuta(); renderDashboard(); guardarLocal(); showToast('Hoja de Ruta actualizada'); }
 }
 function editarObsHR(id, val) {
   var h = hojasRuta.find(function(x){ return x.id === id; });
-  if(h) h.obs = val;
+  if(h) { h.obs = val; guardarLocal(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// FLUJO: técnico marca HdR atendida → Ximena autoriza → pasa a Archivo
+// ═══════════════════════════════════════════════════════
+var marcarHRId = null;
+
+function abrirMarcarAtendida(id) {
+  marcarHRId = id;
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(!h) return;
+  document.getElementById('marcar-subtitulo').textContent = h.hr + ' — ' + h.desc.substring(0,70) + ' · Técnico: ' + h.tecnico;
+  document.getElementById('marcar-motivo').value = '';
+  document.getElementById('marcar-obs').value = '';
+  abrirModal('modal-marcar-atendida');
+}
+
+function guardarSolicitudArchivo() {
+  var motivo = document.getElementById('marcar-motivo').value;
+  if(!motivo){ showToast('Selecciona un motivo', false); return; }
+  var h = hojasRuta.find(function(x){ return x.id === marcarHRId; });
+  if(!h) return;
+  h.solicitudArchivo = {
+    motivo: motivo,
+    obs: document.getElementById('marcar-obs').value.trim(),
+    tecnico: h.tecnico,
+    fecha: new Date().toISOString().split('T')[0]
+  };
+  cerrarModal('modal-marcar-atendida');
+  renderHojasRuta(); renderDashboard();
+  guardarLocal();
+  showToast('📤 Enviado a Ximena para autorización');
+}
+
+function rechazarSolicitudArchivo(id) {
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(!h) return;
+  if(!confirm('¿Rechazar esta solicitud y devolverla a pendiente?')) return;
+  h.solicitudArchivo = null;
+  renderHojasRuta();
+  guardarLocal();
+  showToast('Solicitud rechazada, la HdR vuelve a pendiente');
+}
+
+function autorizarArchivo(id) {
+  var h = hojasRuta.find(function(x){ return x.id === id; });
+  if(!h || !h.solicitudArchivo) return;
+  if(!confirm('¿Autorizar el archivo de "'+h.hr+'"? Pasará a la pestaña Archivados.')) return;
+
+  var s = h.solicitudArchivo;
+  var fechaHoy = new Date().toISOString().split('T')[0];
+  var dias = Math.round((new Date(fechaHoy)-new Date(h.fecha))/86400000);
+
+  archivoHR.push({
+    id: nextArchivoId++,
+    hr: h.hr,
+    desc: h.desc,
+    tecnico: s.tecnico,
+    motivo: s.motivo,
+    fechaArchivo: fechaHoy,
+    fechaHR: h.fecha,
+    dias: dias,
+    obs: s.obs
+  });
+
+  h.estado = '✅ ATENDIDA';
+  h.motivoFinal = s.motivo;
+  h.solicitudArchivo = null;
+
+  renderHojasRuta(); renderArchivo(); renderDashboard();
+  guardarLocal();
+  showToast('✅ Archivo autorizado — pasó a Archivados');
 }
 
 // Upload PDF / Excel
@@ -2047,7 +2392,7 @@ function renderVistaTecnico(nombreTecnico) {
   if(!tec) return;
   var cont = document.getElementById('vista-tecnico-content');
 
-  var misTareas = tareas.filter(function(t){ return t.tecnico === nombreTecnico; });
+  var misTareas = tareas.filter(function(t){ return tareaAsignadaA(t, nombreTecnico); });
   var misHR = hojasRuta.filter(function(h){ return h.tecnico === nombreTecnico; });
   var misCCTP = cctps.filter(function(c){ return misHR.some(function(h){ return h.hr === c.hr; }); });
 
@@ -2162,6 +2507,8 @@ function renderVistaTecnico(nombreTecnico) {
               '<span style="font-size:10px;color:var(--texto-muted);font-weight:700">'+avPct+'%</span>'+
             '</div>'+
             '<button class="btn-mini" onclick="abrirCronograma('+t.id+')">📅 Cronograma ('+(t.subtareas?t.subtareas.filter(function(s){return s.hecho;}).length:0)+'/'+(t.subtareas?t.subtareas.length:0)+')</button>'+
+            '<button class="btn-mini" onclick="abrirAsignar('+t.id+')">👥'+(t.tecnicosAdicionales&&t.tecnicosAdicionales.length?' +'+t.tecnicosAdicionales.length:'')+'</button>'+
+            '<button class="btn-mini" onclick="editarTarea('+t.id+')">✏️ Editar</button>'+
             '<button class="btn-mini" onclick="notificarTarea('+t.id+')">🔔 Notificar avance</button>'+
           '</div>'+
         '</div>'+
@@ -2367,10 +2714,11 @@ function toggleCCTPClick(id) {
 
 // Marcar TODAS las actividades de golpe
 function marcarTodas(nombreTecnico) {
-  tareas.filter(function(t){ return t.tecnico === nombreTecnico; }).forEach(function(t){
+  tareas.filter(function(t){ return tareaAsignadaA(t, nombreTecnico); }).forEach(function(t){
     t.estado = '✅ COMPLETADO'; t.avance = 1; t.notif = '✅ OK';
   });
   renderDashboard(); renderTareas(); renderVistaTecnico(nombreTecnico);
+  guardarLocal();
   showToast('¡Todas las tareas marcadas como cumplidas!');
 }
 function marcarTodasHR(nombreTecnico) {
@@ -2420,7 +2768,7 @@ function renderEquipo() {
   var tbody = document.getElementById('tbody-equipo');
   tbody.innerHTML = '';
   tecnicos.forEach(function(t, i){
-    var numTareas = tareas.filter(function(x){ return x.tecnico === t.nombre; }).length;
+    var numTareas = tareas.filter(function(x){ return tareaAsignadaA(x, t.nombre); }).length;
     tbody.innerHTML += '<tr>'+
       '<td style="color:var(--texto-muted);font-size:11px">'+(i+1)+'</td>'+
       '<td style="font-weight:700;font-size:12px">'+t.nombre+'</td>'+
@@ -2431,7 +2779,8 @@ function renderEquipo() {
       '<td style="text-align:center;font-weight:700">'+numTareas+'</td>'+
       '<td class="row-actions">'+
         '<button class="btn-icon btn-sm" onclick="verTecnico(\''+t.nombre+'\')">👁</button>'+
-        '<button class="btn-icon btn-sm" onclick="editarTelTecnico('+t.id+')" title="Editar teléfono">✏️</button>'+
+        '<button class="btn-icon btn-sm" onclick="editarTecnico('+t.id+')" title="Editar datos">✏️</button>'+
+        '<button class="btn-icon btn-sm" onclick="eliminarTecnico('+t.id+')" title="Eliminar técnico" style="color:var(--rojo)">🗑</button>'+
       '</td>'+
     '</tr>';
   });
@@ -2453,7 +2802,52 @@ function editarTelTecnico(id) {
   var t = tecnicos.find(function(x){ return x.id === id; });
   if(!t) return;
   var nuevo = prompt('Teléfono para '+t.nombre.split(' ')[0]+':', t.tel);
-  if(nuevo !== null) { t.tel = nuevo; renderEquipo(); showToast('Teléfono actualizado'); }
+  if(nuevo !== null) { t.tel = nuevo; renderEquipo(); showToast('Teléfono actualizado'); guardarLocal(); }
+}
+
+function abrirNuevoTecnico() {
+  document.getElementById('nt-edit-id').value = '';
+  ['nt-nombre','nt-correo','nt-tel','nt-telegram','nt-esp'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('modal-tecnico-titulo').textContent = '👤 Agregar Nuevo Técnico';
+  document.getElementById('btn-guardar-tecnico').textContent = '✅ Agregar Técnico';
+  abrirModal('modal-tecnico');
+}
+
+function editarTecnico(id) {
+  var t = tecnicos.find(function(x){ return x.id === id; });
+  if(!t) return;
+  document.getElementById('nt-edit-id').value = id;
+  document.getElementById('nt-nombre').value = t.nombre || '';
+  document.getElementById('nt-correo').value = t.correo || '';
+  document.getElementById('nt-tel').value = t.tel || '';
+  document.getElementById('nt-telegram').value = t.telegram || '';
+  document.getElementById('nt-esp').value = t.esp || '';
+  document.getElementById('modal-tecnico-titulo').textContent = '✏️ Editar Técnico';
+  document.getElementById('btn-guardar-tecnico').textContent = '💾 Guardar Cambios';
+  abrirModal('modal-tecnico');
+}
+
+function eliminarTecnico(id) {
+  var t = tecnicos.find(function(x){ return x.id === id; });
+  if(!t) return;
+  var numTareas = tareas.filter(function(x){ return tareaAsignadaA(x, t.nombre); }).length;
+  var msg = '¿Eliminar a '+t.nombre+' del equipo?';
+  if(numTareas > 0){
+    msg += '\n\n⚠️ Tiene '+numTareas+' tarea(s) asignada(s). Al eliminarlo, esas tareas quedarán marcadas como "SIN ASIGNAR" (como responsable principal) o se le quitará de los técnicos adicionales — las tareas NO se borran, pero deberás reasignarlas manualmente.';
+  }
+  if(!confirm(msg)) return;
+
+  var nombreEliminado = t.nombre;
+  tareas.forEach(function(x){
+    if(x.tecnico === nombreEliminado) x.tecnico = '⚠️ SIN ASIGNAR';
+    if(x.tecnicosAdicionales) x.tecnicosAdicionales = x.tecnicosAdicionales.filter(function(n){ return n !== nombreEliminado; });
+  });
+
+  tecnicos = tecnicos.filter(function(x){ return x.id !== id; });
+  poblarSelects();
+  renderEquipo(); renderTecnicoSelector(); renderTareas(); renderDashboard();
+  guardarLocal();
+  showToast('Técnico eliminado' + (numTareas ? ' — revisa las tareas marcadas "SIN ASIGNAR"' : ''));
 }
 
 function guardarTecnico() {
@@ -2463,14 +2857,39 @@ function guardarTecnico() {
   var telegram = document.getElementById('nt-telegram').value.trim();
   var esp = document.getElementById('nt-esp').value.trim() || 'Técnico DGEA';
   if(!nombre) { alert('Ingrese el nombre del técnico'); return; }
-  if(tecnicos.some(function(t){ return t.nombre === nombre; })) { alert('Ya existe un técnico con ese nombre'); return; }
 
-  tecnicos.push({ id: nextTecnicoId++, nombre, correo, tel, telegram, esp });
+  var editId = document.getElementById('nt-edit-id').value;
+
+  if(editId){
+    var t = tecnicos.find(function(x){ return x.id === parseInt(editId); });
+    if(!t){ showToast('No se encontró el técnico', false); return; }
+    if(nombre !== t.nombre && tecnicos.some(function(x){ return x.nombre === nombre && x.id !== t.id; })){ alert('Ya existe un técnico con ese nombre'); return; }
+    var nombreAnterior = t.nombre;
+    if(nombre !== nombreAnterior){
+      // Propagar el cambio de nombre a todo lo que lo referencia
+      tareas.forEach(function(x){
+        if(x.tecnico === nombreAnterior) x.tecnico = nombre;
+        if(x.tecnicosAdicionales){ x.tecnicosAdicionales = x.tecnicosAdicionales.map(function(n){ return n===nombreAnterior?nombre:n; }); }
+      });
+      hojasRuta.forEach(function(h){ if(h.tecnico === nombreAnterior) h.tecnico = nombre; if(h.remitente === nombreAnterior) h.remitente = nombre; });
+      normas.forEach(function(n){ if(n.responsable === nombreAnterior) n.responsable = nombre; });
+      archivoHR.forEach(function(a){ if(a.tecnico === nombreAnterior) a.tecnico = nombre; });
+      reuniones.forEach(function(r){ if(r.participantes) r.participantes = r.participantes.map(function(n){ return n===nombreAnterior?nombre:n; }); });
+    }
+    t.nombre = nombre; t.correo = correo; t.tel = tel; t.telegram = telegram; t.esp = esp;
+    showToast('Técnico actualizado');
+  } else {
+    if(tecnicos.some(function(t){ return t.nombre === nombre; })) { alert('Ya existe un técnico con ese nombre'); return; }
+    tecnicos.push({ id: nextTecnicoId++, nombre: nombre, correo: correo, tel: tel, telegram: telegram, esp: esp });
+    showToast('Técnico agregado correctamente');
+  }
+
   cerrarModal('modal-tecnico');
+  document.getElementById('nt-edit-id').value = '';
   ['nt-nombre','nt-correo','nt-tel','nt-telegram','nt-esp'].forEach(function(id){ document.getElementById(id).value = ''; });
   poblarSelects();
-  renderEquipo(); renderTecnicoSelector();
-  showToast('Técnico agregado correctamente');
+  renderEquipo(); renderTecnicoSelector(); renderTareas(); renderHojasRuta(); renderNormas(); renderArchivo(); renderReuniones();
+  guardarLocal();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2625,21 +3044,71 @@ function enviarNotificacion(mensaje, correoDestino, asunto) {
 function notificarTarea(tareaId) {
   var t = tareas.find(function(x){ return x.id === tareaId; });
   if(!t) return;
-  var tec = tecnicos.find(function(x){ return x.nombre === t.tecnico; });
+  var nombresInvolucrados = [t.tecnico].concat(t.tecnicosAdicionales || []);
+  var correos = nombresInvolucrados.map(function(n){
+    var tec = tecnicos.find(function(x){ return x.nombre === n; });
+    return tec ? tec.correo : '';
+  }).filter(Boolean).join(',');
   var pct = Math.round((t.avance||0)*100);
   var totalSub = t.subtareas ? t.subtareas.length : 0;
   var hechasSub = t.subtareas ? t.subtareas.filter(function(s){return s.hecho;}).length : 0;
   var msg = '📋 *DGEA – Actualización de tarea*\n'+
-    '👤 '+t.tecnico+'\n'+
+    '👤 '+nombresInvolucrados.join(', ')+'\n'+
     '📝 '+t.desc+'\n'+
     '📊 Estado: '+t.estado+' ('+pct+'%)'+
     (totalSub ? '\n📅 Cronograma: '+hechasSub+'/'+totalSub+' actividades' : '')+
     (t.entrega ? '\n🎯 Entrega: '+fmtFecha(t.entrega) : '');
-  enviarNotificacion(msg, tec ? tec.correo : '', 'DGEA – '+t.desc.substring(0,60));
+  enviarNotificacion(msg, correos, 'DGEA – '+t.desc.substring(0,60));
 }
 
 function notificarDesdeCronograma() {
   if(cronoTareaId) notificarTarea(cronoTareaId);
+}
+
+// ═══════════════════════════════════════════════════════
+// ASIGNAR TÉCNICOS ADICIONALES A UNA TAREA EXISTENTE
+// ═══════════════════════════════════════════════════════
+var asignarTareaId = null;
+
+function abrirAsignar(tareaId) {
+  asignarTareaId = tareaId;
+  var t = tareas.find(function(x){ return x.id === tareaId; });
+  if(!t) return;
+  document.getElementById('asignar-subtitulo').textContent = '📝 ' + t.desc.substring(0,70) + (t.desc.length>70?'…':'') + ' · Responsable principal: ' + t.tecnico;
+  var cont = document.getElementById('asignar-check-list');
+  cont.innerHTML = '';
+  tecnicos.filter(function(tc){ return tc.nombre !== t.tecnico; }).forEach(function(tc){
+    var checked = (t.tecnicosAdicionales||[]).indexOf(tc.nombre) !== -1;
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:#F5F7FA;padding:4px 8px;border-radius:6px;border:1px solid var(--borde)';
+    lbl.innerHTML = '<input type="checkbox" class="asignar-check" value="'+tc.nombre+'"'+(checked?' checked':'')+'> '+tc.nombre.split(' ')[0];
+    cont.appendChild(lbl);
+  });
+  abrirModal('modal-asignar');
+}
+
+function guardarAsignar() {
+  var t = tareas.find(function(x){ return x.id === asignarTareaId; });
+  if(!t) return;
+  t.tecnicosAdicionales = Array.prototype.slice.call(document.querySelectorAll('.asignar-check:checked')).map(function(cb){ return cb.value; });
+  cerrarModal('modal-asignar');
+  renderTareas(); renderDashboard();
+  tecnicos.forEach(function(tc){ if(document.getElementById('vista-tecnico-content')) renderVistaTecnico(tc.nombre); });
+  guardarLocal();
+  showToast('👥 Técnicos asignados: ' + (t.tecnicosAdicionales.length ? t.tecnicosAdicionales.join(', ') : 'solo ' + t.tecnico));
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICAR A TODO EL EQUIPO
+// ═══════════════════════════════════════════════════════
+function enviarNotificacionATodos() {
+  var msg = document.getElementById('notif-todos-msg').value.trim();
+  if(!msg){ showToast('Escribe un mensaje primero', false); return; }
+  var correos = tecnicos.map(function(t){ return t.correo; }).filter(Boolean).join(',');
+  var textoCompleto = '📢 *DGEA – Aviso general*\n' + msg;
+  enviarNotificacion(textoCompleto, correos, 'DGEA – Aviso general para el equipo');
+  document.getElementById('notif-todos-msg').value = '';
+  cerrarModal('modal-notif-todos');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2675,7 +3144,7 @@ function aplicarEstadoRemoto(d) {
   if(d.nextNormaId) nextNormaId = d.nextNormaId;
   if(d.nextArchivoId) nextArchivoId = d.nextArchivoId;
   if(d.nextSubtareaId) nextSubtareaId = d.nextSubtareaId;
-  tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+  tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; if(!t.tecnicosAdicionales) t.tecnicosAdicionales = []; });
   guardarLocal();
 }
 
@@ -2783,7 +3252,7 @@ function cargarLocal() {
     if(d.nextNormaId) nextNormaId = d.nextNormaId;
     if(d.nextArchivoId) nextArchivoId = d.nextArchivoId;
     if(d.nextSubtareaId) nextSubtareaId = d.nextSubtareaId;
-    tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; });
+    tareas.forEach(function(t){ if(!t.subtareas) t.subtareas = []; if(!t.tecnicosAdicionales) t.tecnicosAdicionales = []; });
   } catch(e) { console.warn('No se pudo cargar lo guardado localmente', e); }
 }
 
@@ -2899,12 +3368,16 @@ function renderNormas() {
 function cambiarCampoNorma(id, campo, val) {
   var n = normas.find(function(x){ return x.id===id; });
   if(n) n[campo] = val;
+  renderNormas(); renderDashboard();
+  guardarLocal();
   showToast('✏️ Actualizado');
 }
 function eliminarNorma(id) {
   if(!confirm('¿Eliminar este documento?')) return;
   normas = normas.filter(function(n){ return n.id!==id; });
-  renderNormas(); showToast('Eliminado');
+  renderNormas();
+  guardarLocal();
+  showToast('Eliminado');
 }
 function guardarNorma() {
   var titulo = document.getElementById('nn-titulo').value.trim();
@@ -2924,7 +3397,9 @@ function guardarNorma() {
   });
   cerrarModal('modal-norma');
   ['nn-titulo','nn-version','nn-obs','nn-entrega'].forEach(function(id){ document.getElementById(id).value=''; });
-  renderNormas(); showToast('Norma/Guía guardada');
+  renderNormas(); renderDashboard();
+  guardarLocal();
+  showToast('Norma/Guía guardada');
 }
 
 // ═══════════════════════════════════════════════════════
