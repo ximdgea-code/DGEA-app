@@ -1043,6 +1043,13 @@
         <label><input type="checkbox" id="cfg-auto-notif" style="width:auto;margin-right:6px">Notificar automáticamente al crear/completar una tarea</label>
       </div>
     </div>
+    <div style="border-top:1px solid var(--borde);margin-top:14px;padding-top:14px">
+      <div style="font-size:12px;color:var(--texto-muted);margin-bottom:8px">
+        💡 Para que tus técnicos no tengan que copiar ni pegar nada: primero guarda tus ajustes arriba, y luego genera un enlace listo para mandarles por WhatsApp — solo lo abren y eligen su nombre.
+      </div>
+      <button type="button" class="btn btn-outline" onclick="generarEnlaceEquipo()">🔗 Generar enlace para el equipo</button>
+      <input type="text" id="cfg-enlace-equipo" readonly style="display:none;margin-top:8px;font-size:11px" onclick="this.select()">
+    </div>
     <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
       <button class="btn btn-outline" onclick="cerrarModal('modal-ajustes')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarConfig()">💾 Guardar ajustes</button>
@@ -1504,6 +1511,7 @@ var nextSubtareaId = 1;
 function init() {
   cargarLocal();
   cargarConfig();
+  aplicarConfigDesdeEnlace();
   if(config.syncActivo) sincronizarAhora(false);
   var hoy = new Date();
   document.getElementById('badge-fecha').textContent = '📅 ' + hoy.toLocaleDateString('es-BO');
@@ -3005,6 +3013,41 @@ function cargarConfig() {
   actualizarBadgeSync();
 }
 
+function aplicarConfigDesdeEnlace() {
+  var params = new URLSearchParams(window.location.search);
+  var url = params.get('surl');
+  var chat = params.get('chat');
+  if(!url && !chat) return;
+
+  if(url) config.scriptUrl = url;
+  if(chat) config.chatId = chat;
+  config.syncActivo = true;
+  localStorage.setItem('dgea_config_v1', JSON.stringify(config));
+
+  // Limpiar la URL visible para no dejar datos en el historial del navegador
+  window.history.replaceState({}, '', window.location.pathname);
+
+  setTimeout(function(){
+    cargarConfig();
+    document.getElementById('cfg-sync-activo').checked = true;
+    abrirModal('modal-ajustes');
+    showToast('📲 Conexión detectada — solo falta elegir tu nombre y guardar');
+  }, 300);
+}
+
+function generarEnlaceEquipo() {
+  var url = document.getElementById('cfg-script-url').value.trim();
+  var chat = document.getElementById('cfg-chat-id').value.trim();
+  if(!url || !chat){ showToast('Completa y guarda primero la URL y el Chat ID', false); return; }
+  var base = window.location.origin + window.location.pathname;
+  var enlace = base + '?surl=' + encodeURIComponent(url) + '&chat=' + encodeURIComponent(chat);
+  var campo = document.getElementById('cfg-enlace-equipo');
+  campo.style.display = 'block';
+  campo.value = enlace;
+  campo.select();
+  try { document.execCommand('copy'); showToast('🔗 Enlace copiado — pégalo en WhatsApp para tu equipo'); }
+  catch(e){ showToast('🔗 Enlace generado abajo — cópialo manualmente'); }
+}
 function guardarConfig() {
   config.scriptUrl = document.getElementById('cfg-script-url').value.trim();
   config.chatId = document.getElementById('cfg-chat-id').value.trim();
