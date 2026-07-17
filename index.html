@@ -3329,8 +3329,37 @@ function instalarApp() {
 
 if('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('SW no registrado (normal si abres el archivo local):', e); });
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      // Si ya había un Service Worker esperando (una actualización que llegó
+      // mientras la app estaba cerrada), avisamos apenas se abre.
+      if(reg.waiting) mostrarAvisoActualizacion(reg.waiting);
+
+      reg.addEventListener('updatefound', function(){
+        var nuevo = reg.installing;
+        nuevo.addEventListener('statechange', function(){
+          if(nuevo.state === 'installed' && navigator.serviceWorker.controller){
+            mostrarAvisoActualizacion(nuevo);
+          }
+        });
+      });
+    }).catch(function(e){ console.warn('SW no registrado (normal si abres el archivo local):', e); });
+
+    // Cuando el nuevo Service Worker toma control, recargamos automáticamente.
+    var yaRecargo = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(yaRecargo) return;
+      yaRecargo = true;
+      window.location.reload();
+    });
   });
+}
+
+function mostrarAvisoActualizacion(swEnEspera) {
+  var b = document.createElement('div');
+  b.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1F3864;color:white;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer;display:flex;align-items:center;gap:10px';
+  b.innerHTML = '🔄 Hay una versión nueva de la app — toca para actualizar';
+  b.onclick = function(){ swEnEspera.postMessage({type:'SKIP_WAITING'}); b.remove(); };
+  document.body.appendChild(b);
 }
 
 // ═══════════════════════════════════════════════════════
