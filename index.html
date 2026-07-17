@@ -1036,8 +1036,8 @@
         <label>Tu nombre (para identificar quién sincronizó)</label>
         <select id="cfg-usuario"><option value="">-- Seleccionar --</option></select>
       </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label><input type="checkbox" id="cfg-sync-activo" style="width:auto;margin-right:6px">Compartir datos en vivo con todo el equipo (misma información en todos los celulares)</label>
+      <div class="form-group" style="grid-column:1/-1;background:#F0F6FF;border-radius:8px;padding:10px 12px;font-size:12px;color:#1F4E79">
+        ☁️ En cuanto guardes la URL de Apps Script, esta app queda compartiendo datos con todo el equipo automáticamente — no hace falta activar nada más.
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label><input type="checkbox" id="cfg-auto-notif" style="width:auto;margin-right:6px">Notificar automáticamente al crear/completar una tarea</label>
@@ -3003,10 +3003,15 @@ function cargarConfig() {
     var raw = localStorage.getItem('dgea_config_v1');
     if(raw) config = Object.assign(config, JSON.parse(raw));
   } catch(e) { console.warn('No se pudo cargar la configuración', e); }
+  // Si ya hay una URL de Apps Script guardada, la sincronización se activa
+  // sola — no debe depender de que alguien recuerde marcar una casilla.
+  if(config.scriptUrl && !config.syncActivo){
+    config.syncActivo = true;
+    localStorage.setItem('dgea_config_v1', JSON.stringify(config));
+  }
   document.getElementById('cfg-script-url').value = config.scriptUrl || '';
   document.getElementById('cfg-chat-id').value = config.chatId || '';
   document.getElementById('cfg-auto-notif').checked = !!config.autoNotif;
-  document.getElementById('cfg-sync-activo').checked = !!config.syncActivo;
   var selUsuario = document.getElementById('cfg-usuario');
   selUsuario.innerHTML = '<option value="">-- Seleccionar --</option>' +
     tecnicos.map(function(t){ return '<option value="'+t.nombre+'"'+(config.usuario===t.nombre?' selected':'')+'>'+t.nombre+'</option>'; }).join('');
@@ -3029,7 +3034,6 @@ function aplicarConfigDesdeEnlace() {
 
   setTimeout(function(){
     cargarConfig();
-    document.getElementById('cfg-sync-activo').checked = true;
     abrirModal('modal-ajustes');
     showToast('📲 Conexión detectada — solo falta elegir tu nombre y guardar');
   }, 300);
@@ -3053,7 +3057,7 @@ function guardarConfig() {
   config.chatId = document.getElementById('cfg-chat-id').value.trim();
   config.autoNotif = document.getElementById('cfg-auto-notif').checked;
   config.usuario = document.getElementById('cfg-usuario').value;
-  config.syncActivo = document.getElementById('cfg-sync-activo').checked;
+  config.syncActivo = !!config.scriptUrl; // se comparte solo con que haya URL, sin casilla aparte
   localStorage.setItem('dgea_config_v1', JSON.stringify(config));
   cerrarModal('modal-ajustes');
   showToast('⚙️ Ajustes guardados');
